@@ -134,3 +134,26 @@ export const login = async (req, res) => {
   }
 };
 
+/**
+ * @desc    Obtém os dados do usuário logado
+ * @route   GET /api/auth/me
+ * @access  Private
+ */
+export const getMe = async (req, res) => {
+  try {
+    // O usuário já foi anexado à requisição pelo middleware protect
+    return res.status(200).json({
+      success: true,
+      user: req.user,
+    });
+  } catch (error) {
+    console.error('Erro ao obter dados do usuário logado:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Erro interno do servidor ao obter dados do usuário.',
+      error: error.message,
+    });
+  }
+};
+
+
