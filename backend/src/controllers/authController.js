@@ -134,6 +134,7 @@ export const login = async (req, res) => {
   }
 };
 
+
 /**
  * @desc    Obtém os dados do usuário logado
  * @route   GET /api/auth/me

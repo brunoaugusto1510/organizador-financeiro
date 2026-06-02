@@ -40,12 +40,19 @@ let estadoFiltros = { tipo: 'todos', busca: '', dataInicio: '', dataFim: '' };
 // INICIALIZAÇÃO
 // ============================================================
 document.addEventListener('DOMContentLoaded', () => {
+  // Redireciona para a tela de login caso não esteja autenticado
+  if (!localStorage.getItem('access_token')) {
+    window.location.href = window.location.protocol === 'file:' ? 'login.html' : '/login';
+    return;
+  }
+
   exibirNomeUsuario();
   inicializarNavegacao();
   inicializarMenuMobile();
   inicializarModal();
   inicializarFormTransacao();
   inicializarSecaoTransacoes();
+  inicializarLogout();
   carregarDashboard();
   carregarTodasTransacoes();
 });
@@ -74,6 +81,21 @@ function exibirNomeUsuario() {
         ${iniciais}
       </span>
     `;
+  }
+}
+
+// ============================================================
+// LOGOUT DO USUÁRIO
+// ============================================================
+function inicializarLogout() {
+  const btnSair = document.getElementById('nav-sair');
+  if (btnSair) {
+    btnSair.addEventListener('click', () => {
+      // Limpa os dados de autenticação do localStorage
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('refresh_token');
+      localStorage.removeItem('user_name');
+    });
   }
 }
 
