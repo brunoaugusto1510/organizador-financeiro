@@ -1,5 +1,6 @@
 import express from 'express';
 import cors from 'cors';
+import transactionRoutes from './routes/transactionRoutes.js';
 
 const app = express();
 
@@ -12,5 +13,7 @@ app.get('/', (req, res) => {
     message: 'API do Organizador Financeiro funcionando.',
   });
 });
+
+app.use('/api/transactions', transactionRoutes);
 
 export default app;

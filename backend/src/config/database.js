@@ -4,16 +4,17 @@ const connectDatabase = async () => {
   const mongoUri = process.env.MONGO_URI;
 
   if (!mongoUri) {
-    console.error('Erro: variável de ambiente MONGO_URI não definida.');
-    process.exit(1);
+    console.warn('Aviso: variável de ambiente MONGO_URI não definida. O backend rodará em modo de fallback local (dados simulados).');
+    return;
   }
 
   try {
-    const conn = await mongoose.connect(mongoUri);
+    const conn = await mongoose.connect(mongoUri, {
+      serverSelectionTimeoutMS: 2000,
+    });
     console.log(`MongoDB conectado: ${conn.connection.host}`);
   } catch (error) {
-    console.error(`Erro ao conectar no MongoDB: ${error.message}`);
-    process.exit(1);
+    console.warn(`Aviso: Erro ao conectar no MongoDB (${error.message}). O backend rodará em modo de fallback local (dados simulados).`);
   }
 };
 
