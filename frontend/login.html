@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Entre na sua conta ou cadastre-se no Organizador Financeiro." />
+
+    <title>Login — FinançasFácil</title>
+
+    <!-- Fonte: Nunito -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap" rel="stylesheet" />
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="css/variables.css" />
+    <link rel="stylesheet" href="css/reset.css" />
+    <link rel="stylesheet" href="css/components.css" />
+    <link rel="stylesheet" href="css/pages.css" />
+  </head>
+
+  <body>
+
+    <!-- SPINNER DE LOADING GLOBAL -->
+    <div class="spinner-overlay oculto" id="spinner" role="status" aria-label="Carregando...">
+      <div class="spinner"></div>
+    </div>
+
+    <!-- CONTAINER DE TOASTS -->
+    <div class="toast-container" id="toast-container" aria-live="polite" aria-atomic="true"></div>
+
+    <!-- PÁGINA DE AUTENTICAÇÃO -->
+    <main class="pagina-auth" role="main">
+
+      <div class="auth-card">
+
+        <!-- Logo / Cabeçalho -->
+        <header class="auth-card__logo">
+          <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24"
+               fill="none" stroke="var(--cor-primaria)" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round"
+               aria-hidden="true" focusable="false">
+            <line x1="12" y1="1" x2="12" y2="23"></line>
+            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+          </svg>
+          <h1>FinançasFácil</h1>
+          <p>Controle suas finanças com simplicidade</p>
+        </header>
+
+        <!-- Abas: Login / Cadastro -->
+        <div class="auth-tabs" role="tablist" aria-label="Tipo de acesso">
+          <button class="auth-tab ativo"
+                  id="tab-login"
+                  role="tab"
+                  aria-selected="true"
+                  aria-controls="form-login">
+            Entrar
+          </button>
+          <button class="auth-tab"
+                  id="tab-cadastro"
+                  role="tab"
+                  aria-selected="false"
+                  aria-controls="form-cadastro">
+            Criar conta
+          </button>
+        </div>
+
+        <!-- ── FORMULÁRIO DE LOGIN ── -->
+        <form class="auth-form ativo"
+              id="form-login"
+              role="tabpanel"
+              aria-labelledby="tab-login"
+              novalidate>
+
+          <div class="form-grupo">
+            <label for="login-email">E-mail</label>
+            <input
+              type="email"
+              id="login-email"
+              name="email"
+              placeholder="seu@email.com"
+              autocomplete="email"
+              required
+            />
+            <span class="form-erro-msg" id="login-email-erro" aria-live="polite"></span>
+          </div>
+
+          <div class="form-grupo">
+            <label for="login-senha">Senha</label>
+            <input
+              type="password"
+              id="login-senha"
+              name="senha"
+              placeholder="Sua senha"
+              autocomplete="current-password"
+              required
+              minlength="6"
+            />
+            <span class="form-erro-msg" id="login-senha-erro" aria-live="polite"></span>
+          </div>
+
+          <button type="submit" class="btn btn--primario btn--bloco" id="btn-login">
+            Entrar
+          </button>
+
+        </form>
+
+        <!-- ── FORMULÁRIO DE CADASTRO ── -->
+        <form class="auth-form"
+              id="form-cadastro"
+              role="tabpanel"
+              aria-labelledby="tab-cadastro"
+              novalidate
+              hidden>
+
+          <div class="form-grupo">
+            <label for="cadastro-nome">Nome completo</label>
+            <input
+              type="text"
+              id="cadastro-nome"
+              name="nome"
+              placeholder="Seu nome"
+              autocomplete="name"
+              required
+              minlength="3"
+            />
+            <span class="form-erro-msg" id="cadastro-nome-erro" aria-live="polite"></span>
+          </div>
+
+          <div class="form-grupo">
+            <label for="cadastro-email">E-mail</label>
+            <input
+              type="email"
+              id="cadastro-email"
+              name="email"
+              placeholder="seu@email.com"
+              autocomplete="email"
+              required
+            />
+            <span class="form-erro-msg" id="cadastro-email-erro" aria-live="polite"></span>
+          </div>
+
+          <div class="form-grupo">
+            <label for="cadastro-senha">Senha</label>
+            <input
+              type="password"
+              id="cadastro-senha"
+              name="senha"
+              placeholder="Mínimo 6 caracteres"
+              autocomplete="new-password"
+              required
+              minlength="6"
+            />
+            <span class="form-erro-msg" id="cadastro-senha-erro" aria-live="polite"></span>
+          </div>
+
+          <div class="form-grupo">
+            <label for="cadastro-senha-confirma">Confirmar senha</label>
+            <input
+              type="password"
+              id="cadastro-senha-confirma"
+              name="senha_confirma"
+              placeholder="Repita a senha"
+              autocomplete="new-password"
+              required
+            />
+            <span class="form-erro-msg" id="cadastro-senha-confirma-erro" aria-live="polite"></span>
+          </div>
+
+          <button type="submit" class="btn btn--primario btn--bloco" id="btn-cadastro">
+            Criar conta
+          </button>
+
+        </form>
+
+        <!-- Rodapé da auth-card -->
+        <p class="auth-rodape">
+          Projeto acadêmico &mdash; FinançasFácil &copy; 2025
+        </p>
+
+      </div>
+    </main>
+
+    <!-- JavaScript -->
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+
+  </body>
+</html>
