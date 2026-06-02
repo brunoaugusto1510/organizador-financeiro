@@ -85,3 +85,52 @@ export const register = async (req, res) => {
     });
   }
 };
+
+/**
+ * @desc    Autentica um usuário e retorna dados do usuário e o token JWT
+ * @route   POST /api/auth/login
+ * @access  Public
+ */
+export const login = async (req, res) => {
+  const { email, password } = req.body;
+
+  try {
+    // Validação básica dos campos obrigatórios
+    if (!email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: 'Por favor, preencha todos os campos obrigatórios (email e senha).',
+      });
+    }
+
+    // Busca o usuário pelo email
+    const user = await User.findOne({ email: email.toLowerCase() });
+
+    // Verifica se o usuário existe e se a senha está correta
+    if (!user || !(await user.matchPassword(password))) {
+      return res.status(401).json({
+        success: false,
+        message: 'E-mail ou senha inválidos.',
+      });
+    }
+
+    // Gera o token JWT para o usuário
+    const token = generateToken(user._id);
+
+    // Retorna os dados do usuário e o token JWT
+    return res.status(200).json({
+      success: true,
+      message: 'Login realizado com sucesso.',
+      user,
+      token,
+    });
+  } catch (error) {
+    console.error('Erro no login de usuário:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Erro interno do servidor ao realizar login.',
+      error: error.message,
+    });
+  }
+};
+
