@@ -3,6 +3,7 @@ import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import authRoutes from './routes/authRoutes.js';
+import transactionRoutes from './routes/transactionRoutes.js'; // 1. IMPORTOU SUA ROTA AQUI
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -17,6 +18,7 @@ app.use(express.static(path.join(__dirname, '../../frontend')));
 
 // Rotas da API
 app.use('/api/auth', authRoutes);
+app.use('/api', transactionRoutes); // 2. ADICIONOU SUA ROTA FINANCEIRA AQUI
 
 // Rota para renderizar a tela de login/cadastro
 app.get('/login', (req, res) => {
