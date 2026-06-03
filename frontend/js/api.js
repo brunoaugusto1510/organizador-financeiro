@@ -1,12 +1,59 @@
 /**
  * api.js
- * Centraliza a comunicação com a API REST usando fetch nativo.
+ * Centraliza a comunicacao com a API REST usando fetch nativo.
  */
 
-const API_BASE_URL = '/api'; // Ajustado para caminhos relativos (funciona localmente e em deploy)
+const API_BASE_URL = '/api';
+
+const TIPO_UI_PARA_API = {
+  entrada: 'income',
+  saida: 'expense',
+  pendente: 'pending',
+};
+
+const TIPO_API_PARA_UI = {
+  income: 'entrada',
+  expense: 'saida',
+  pending: 'pendente',
+};
+
+function dataParaInput(data) {
+  if (!data) return '';
+  return String(data).split('T')[0];
+}
+
+function normalizarTransacaoApi(transacao) {
+  if (!transacao) return transacao;
+
+  return {
+    id: transacao._id || transacao.id,
+    descricao: transacao.title || '',
+    tipo: TIPO_API_PARA_UI[transacao.type] || transacao.type,
+    valor: transacao.amount || 0,
+    data: dataParaInput(transacao.date),
+    categoria: transacao.category || '',
+    observacao: transacao.description || '',
+  };
+}
+
+function normalizarListaTransacoes(dados) {
+  const lista = Array.isArray(dados) ? dados : (dados?.results || []);
+  return lista.map(normalizarTransacaoApi);
+}
+
+function montarPayloadTransacao(dados) {
+  return {
+    title: dados.descricao,
+    type: TIPO_UI_PARA_API[dados.tipo] || dados.tipo,
+    amount: dados.valor,
+    category: dados.categoria,
+    date: dados.data,
+    description: dados.observacao,
+  };
+}
 
 /**
- * Retorna os cabeçalhos padrão, injetando o token JWT se existir.
+ * Retorna os cabecalhos padrao, injetando o token JWT se existir.
  */
 function getHeaders() {
   const token = localStorage.getItem('access_token');
@@ -17,7 +64,7 @@ function getHeaders() {
 }
 
 /**
- * Wrapper genérico para requisições fetch.
+ * Wrapper generico para requisicoes fetch.
  */
 async function request(endpoint, options = {}) {
   const url = `${API_BASE_URL}${endpoint}`;
@@ -33,7 +80,7 @@ async function request(endpoint, options = {}) {
     const resposta = await fetch(url, config);
     const contentType = resposta.headers.get('content-type');
     let dados = null;
-    
+
     if (contentType && contentType.includes('application/json')) {
       dados = await resposta.json();
     }
@@ -45,19 +92,19 @@ async function request(endpoint, options = {}) {
     return dados;
   } catch (erro) {
     console.error(`[API Error] ${options.method || 'GET'} ${url}:`, erro.message);
-    throw erro; // Repassa o erro para ser tratado pela UI (modo demo)
+    throw erro;
   }
 }
 
 // ============================================================
-// SERVIÇOS DE AUTENTICAÇÃO
+// SERVICOS DE AUTENTICACAO
 // ============================================================
 const AuthAPI = {
   login: (email, password) => request('/auth/login', {
     method: 'POST',
     body: JSON.stringify({ email, password })
   }),
-  
+
   register: (name, email, password) => request('/auth/register', {
     method: 'POST',
     body: JSON.stringify({ name, email, password })
@@ -65,26 +112,26 @@ const AuthAPI = {
 };
 
 // ============================================================
-// SERVIÇOS DE TRANSAÇÕES
+// SERVICOS DE TRANSACOES
 // ============================================================
 const TransacoesAPI = {
-  listar: () => request('/transactions'),
-  
-  obter: (id) => request(`/transactions/${id}`),
-  
-  criar: (dados) => request('/transactions', {
+  listar: async () => normalizarListaTransacoes(await request('/transactions')),
+
+  obter: async (id) => normalizarTransacaoApi(await request(`/transactions/${id}`)),
+
+  criar: async (dados) => normalizarTransacaoApi(await request('/transactions', {
     method: 'POST',
-    body: JSON.stringify(dados)
-  }),
-  
-  atualizar: (id, dados) => request(`/transactions/${id}`, {
+    body: JSON.stringify(montarPayloadTransacao(dados))
+  })),
+
+  atualizar: async (id, dados) => normalizarTransacaoApi(await request(`/transactions/${id}`, {
     method: 'PUT',
-    body: JSON.stringify(dados)
-  }),
-  
+    body: JSON.stringify(montarPayloadTransacao(dados))
+  })),
+
   excluir: (id) => request(`/transactions/${id}`, {
     method: 'DELETE'
   }),
-  
-  resumo: () => request('/resumo')
+
+  resumo: () => request('/transactions/dashboard/summary')
 };

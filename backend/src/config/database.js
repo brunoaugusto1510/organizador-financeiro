@@ -1,20 +1,33 @@
 import mongoose from 'mongoose';
 
+let connectionPromise = null;
+
 const connectDatabase = async () => {
+  if (mongoose.connection.readyState === 1) {
+    return mongoose.connection;
+  }
+
   const mongoUri = process.env.MONGO_URI;
 
   if (!mongoUri) {
-    console.error('Erro: variável de ambiente MONGO_URI não definida.');
-    process.exit(1);
+    throw new Error('Variavel de ambiente MONGO_URI nao definida.');
   }
 
-  try {
-    const conn = await mongoose.connect(mongoUri);
-    console.log(`MongoDB conectado: ${conn.connection.host}`);
-  } catch (error) {
-    console.error(`Erro ao conectar no MongoDB: ${error.message}`);
-    process.exit(1);
+  if (!connectionPromise) {
+    connectionPromise = mongoose.connect(mongoUri, {
+      serverSelectionTimeoutMS: 5000,
+    })
+      .then((conn) => {
+        console.log(`MongoDB conectado: ${conn.connection.host}`);
+        return conn.connection;
+      })
+      .catch((error) => {
+        connectionPromise = null;
+        throw error;
+      });
   }
+
+  return connectionPromise;
 };
 
 export default connectDatabase;

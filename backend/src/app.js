@@ -4,7 +4,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import authRoutes from './routes/authRoutes.js';
 import transactionRoutes from './routes/transactionRoutes.js';
-import errorHandler from './middlewares/errorHandler.js'; // 1. Importou o tratador global de erros
+import connectDatabase from './config/database.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -14,28 +14,41 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Servir arquivos estáticos do frontend
 app.use(express.static(path.join(__dirname, '../../frontend')));
 
-// Rotas da API
-app.use('/api/auth', authRoutes);
-app.use('/api', transactionRoutes);
+async function ensureDatabase(req, res, next) {
+  try {
+    await connectDatabase();
+    return next();
+  } catch (error) {
+    console.error('Erro ao conectar no MongoDB:', error.message);
+    return res.status(503).json({
+      success: false,
+      message: 'Banco de dados indisponivel. Verifique as variaveis de ambiente do servidor.',
+    });
+  }
+}
 
-// Rota para renderizar a tela de login/cadastro
+app.use('/api', ensureDatabase);
+app.use('/api/auth', authRoutes);
+app.use('/api/transactions', transactionRoutes);
+app.use('/api', (req, res) => {
+  return res.status(404).json({
+    success: false,
+    message: 'Rota da API nao encontrada.',
+  });
+});
+
 app.get('/login', (req, res) => {
   res.sendFile(path.join(__dirname, '../../frontend/login.html'));
 });
 
-// Fallback para index.html em caso de rota não reconhecida (SPA)
 app.get('*', (req, res, next) => {
-  // Ignora chamadas de API para não retornar HTML no lugar de JSON em caso de erro 404 de API
   if (req.path.startsWith('/api')) {
     return next();
   }
-  res.sendFile(path.join(__dirname, '../../frontend/index.html'));
-});
 
-// 2. O Middleware Global de Erro DEVE ser sempre o último a ser declarado!
-app.use(errorHandler);
+  return res.sendFile(path.join(__dirname, '../../frontend/index.html'));
+});
 
 export default app;

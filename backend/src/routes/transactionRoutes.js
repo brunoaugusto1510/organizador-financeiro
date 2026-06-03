@@ -1,15 +1,21 @@
 import express from 'express';
-import { criarTransacao, editarTransacao, excluirTransacao, listarTransacoes } from '../controllers/transactionController.js';
-import { validarTransacao } from '../middlewares/validTransaction.js'; // Importa o validador
+import {
+  criarTransacao,
+  editarTransacao,
+  excluirTransacao,
+  listarTransacoes,
+  resumirDashboard,
+} from '../controllers/transactionController.js';
+import { protect } from '../middlewares/authMiddleware.js';
 
 const router = express.Router();
 
-router.get('/transacoes', listarTransacoes);
+router.use(protect);
 
-// Aplica o middleware de validação antes de chamar a função de criar
-router.post('/transacoes', validarTransacao, criarTransacao);
-
-router.put('/transacoes/:id', editarTransacao);
-router.delete('/transacoes/:id', excluirTransacao);
+router.get('/dashboard/summary', resumirDashboard);
+router.get('/', listarTransacoes);
+router.post('/', criarTransacao);
+router.put('/:id', editarTransacao);
+router.delete('/:id', excluirTransacao);
 
 export default router;

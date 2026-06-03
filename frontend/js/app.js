@@ -426,8 +426,8 @@ async function salvarTransacao() {
     console.warn('API indisponível — modo demonstração:', erro.message);
     // Salva localmente nos dados demo
     if (id) {
-       const idx = DEMO.transacoes.findIndex(t => t.id == id);
-       if(idx > -1) DEMO.transacoes[idx] = { id: parseInt(id), ...payload };
+       const idx = DEMO.transacoes.findIndex(t => String(t.id) === String(id));
+       if(idx > -1) DEMO.transacoes[idx] = { id, ...payload };
     } else {
        DEMO.transacoes.unshift({ id: Date.now(), ...payload });
     }
@@ -600,11 +600,11 @@ function renderizarTabelaTransacoes(lista) {
       <td>
         <div class="acoes-tabela">
           <button class="btn-acao btn-acao--editar"
-                  onclick="editarTransacao(${t.id})"
+                  onclick="editarTransacao('${t.id}')"
                   aria-label="Editar transação ${t.descricao}"
                   title="Editar">✏️</button>
           <button class="btn-acao btn-acao--excluir"
-                  onclick="excluirTransacao(${t.id})"
+                  onclick="excluirTransacao('${t.id}')"
                   aria-label="Excluir transação ${t.descricao}"
                   title="Excluir">🗑️</button>
         </div>
@@ -633,13 +633,13 @@ function renderizarTabelaTransacoes(lista) {
 
 /** Abre o modal preenchido para edição */
 function editarTransacao(id) {
-  const transacao = todasTransacoes.find(t => t.id === id);
+  const transacao = todasTransacoes.find(t => String(t.id) === String(id));
   if (transacao) abrirModal(transacao);
 }
 
 /** Exclui a transação (API ou demo) */
 async function excluirTransacao(id) {
-  const transacao = todasTransacoes.find(t => t.id === id);
+  const transacao = todasTransacoes.find(t => String(t.id) === String(id));
   if (!transacao) return;
 
   const confirmar = window.confirm(`Excluir "${transacao.descricao}"?\n\nEssa ação não pode ser desfeita.`);
@@ -657,8 +657,8 @@ async function excluirTransacao(id) {
     mostrarToast('Transação removida! (modo demonstração)', 'sucesso');
   } finally {
     // Remove da lista em memória e re-renderiza
-    todasTransacoes = todasTransacoes.filter(t => t.id !== id);
-    DEMO.transacoes = DEMO.transacoes.filter(t => t.id !== id);
+    todasTransacoes = todasTransacoes.filter(t => String(t.id) !== String(id));
+    DEMO.transacoes = DEMO.transacoes.filter(t => String(t.id) !== String(id));
     aplicarFiltros();
     renderizarTransacoesRecentes(todasTransacoes.slice(0, 5));
     renderizarContasPagar();
@@ -698,15 +698,15 @@ function renderizarContasPagar() {
       <td>
         <div class="acoes-tabela">
           <button class="btn-acao" style="color: var(--cor-sucesso); border-color: var(--cor-sucesso);"
-                  onclick="pagarConta(${t.id})"
+                  onclick="pagarConta('${t.id}')"
                   aria-label="Marcar como pago"
                   title="Pagar">✔️</button>
           <button class="btn-acao btn-acao--editar"
-                  onclick="editarTransacao(${t.id})"
+                  onclick="editarTransacao('${t.id}')"
                   aria-label="Editar conta"
                   title="Editar">✏️</button>
           <button class="btn-acao btn-acao--excluir"
-                  onclick="excluirTransacao(${t.id})"
+                  onclick="excluirTransacao('${t.id}')"
                   aria-label="Excluir conta"
                   title="Excluir">🗑️</button>
         </div>
@@ -733,7 +733,7 @@ function renderizarContasPagar() {
 }
 
 async function pagarConta(id) {
-  const transacao = todasTransacoes.find(t => t.id === id);
+  const transacao = todasTransacoes.find(t => String(t.id) === String(id));
   if (!transacao) return;
 
   const confirmar = window.confirm(`Deseja marcar "${transacao.descricao}" como pago?`);
@@ -754,12 +754,12 @@ async function pagarConta(id) {
   } catch (erro) {
     console.warn('API indisponível — atualizando localmente (demo).', erro.message);
     // Demo fallback: substitui no mock
-    const idxDemo = DEMO.transacoes.findIndex(t => t.id === id);
+    const idxDemo = DEMO.transacoes.findIndex(t => String(t.id) === String(id));
     if (idxDemo > -1) DEMO.transacoes[idxDemo] = payloadAtualizado;
     mostrarToast('Conta paga! (modo demonstração)', 'sucesso');
   } finally {
     // Atualiza listagem global
-    const idxReal = todasTransacoes.findIndex(t => t.id === id);
+    const idxReal = todasTransacoes.findIndex(t => String(t.id) === String(id));
     if (idxReal > -1) todasTransacoes[idxReal] = payloadAtualizado;
     
     carregarDashboard();
