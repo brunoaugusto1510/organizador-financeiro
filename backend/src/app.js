@@ -3,7 +3,8 @@ import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import authRoutes from './routes/authRoutes.js';
-import transactionRoutes from './routes/transactionRoutes.js'; // 1. IMPORTOU SUA ROTA AQUI
+import transactionRoutes from './routes/transactionRoutes.js';
+import errorHandler from './middlewares/errorHandler.js'; // 1. Importou o tratador global de erros
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -18,7 +19,7 @@ app.use(express.static(path.join(__dirname, '../../frontend')));
 
 // Rotas da API
 app.use('/api/auth', authRoutes);
-app.use('/api', transactionRoutes); // 2. ADICIONOU SUA ROTA FINANCEIRA AQUI
+app.use('/api', transactionRoutes);
 
 // Rota para renderizar a tela de login/cadastro
 app.get('/login', (req, res) => {
@@ -33,5 +34,8 @@ app.get('*', (req, res, next) => {
   }
   res.sendFile(path.join(__dirname, '../../frontend/index.html'));
 });
+
+// 2. O Middleware Global de Erro DEVE ser sempre o último a ser declarado!
+app.use(errorHandler);
 
 export default app;
