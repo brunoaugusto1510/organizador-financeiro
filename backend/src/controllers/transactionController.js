@@ -97,3 +97,34 @@ export const editarTransacao = async (req, res) => {
     });
   }
 };
+
+// Função para eliminar uma transação existente do banco de dados
+export const excluirTransacao = async (req, res) => {
+  try {
+    const { id } = req.params; // Captura o ID dinâmico passado na URL
+
+    // 1. Busca no MongoDB Atlas e remove o documento correspondente
+    const transacaoExcluida = await Transaction.findByIdAndDelete(id);
+
+    // 2. Critério de aceitação: Deve retornar erro se a transação não existir
+    if (!transacaoExcluida) {
+      return res.status(404).json({
+        sucesso: false,
+        mensagem: 'Transação não encontrada.'
+      });
+    }
+
+    // 3. Critérios de aceitação: Deve retornar mensagem de sucesso
+    return res.status(200).json({
+      sucesso: true,
+      mensagem: 'Transação eliminada com sucesso.'
+    });
+
+  } catch (error) {
+    return res.status(400).json({
+      sucesso: false,
+      mensagem: 'Erro ao eliminar transação.',
+      erro: error.message
+    });
+  }
+};
