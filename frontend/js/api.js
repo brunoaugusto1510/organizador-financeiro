@@ -3,7 +3,7 @@
  * Centraliza a comunicação com a API REST usando fetch nativo.
  */
 
-const API_BASE_URL = 'http://localhost:3000/api'; // Ajustado para a porta padrão do Express Node.js
+const API_BASE_URL = '/api'; // Ajustado para caminhos relativos (funciona localmente e em deploy)
 
 /**
  * Retorna os cabeçalhos padrão, injetando o token JWT se existir.
