@@ -128,3 +128,49 @@ export const excluirTransacao = async (req, res) => {
     });
   }
 };
+// Função para listar transações com filtros dinâmicos (Query Params)
+export const listarTransacoes = async (req, res) => {
+  try {
+    // 1. Lê os parâmetros de consulta enviados na URL (?type=...&month=...&year=...)
+    const { type, month, year } = req.query;
+
+    // Criamos um objeto vazio onde vamos embutir as regras do filtro
+    let filtro = {};
+
+    // 2. Critério: Deve filtrar por tipo (se informado)
+    if (type) {
+      filtro.type = type;
+    }
+
+    // 3. Critério: Deve filtrar por mês e ano
+    if (month && year) {
+      // O mês no JavaScript/MongoDB vai de 0 a 11, mas recebemos de 1 a 12
+      const anoInt = parseInt(year);
+      const mesInt = parseInt(month) - 1;
+
+      // Cria a data de início (dia 1 do mês escolhido)
+      const dataInicio = new Date(anoInt, mesInt, 1);
+      // Cria a data de fim (dia 1 do próximo mês)
+      const dataFim = new Date(anoInt, mesInt + 1, 1);
+
+      // Usamos os operadores do MongoDB: $gte (maior ou igual) e $lt (menor que)
+      filtro.date = {
+        $gte: dataInicio,
+        $lt: dataFim
+      };
+    }
+
+    // 4. Busca no banco de dados aplicando o filtro e mantendo a ordenação (mais recentes primeiro)
+    const transacoes = await Transaction.find(filtro).sort({ date: -1 });
+
+    // 5. Critério: Retornar os dados encontrados (ou array vazio [] se não houver resultados)
+    return res.status(200).json(transacoes);
+
+  } catch (error) {
+    return res.status(500).json({
+      sucesso: false,
+      mensagem: 'Erro ao buscar transações.',
+      erro: error.message
+    });
+  }
+};

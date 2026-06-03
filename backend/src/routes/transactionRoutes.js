@@ -1,7 +1,15 @@
 import express from 'express';
-import { criarTransacao, editarTransacao, excluirTransacao } from '../controllers/transactionController.js';
+import { 
+  criarTransacao, 
+  editarTransacao, 
+  excluirTransacao, 
+  listarTransacoes // Adicione o import aqui
+} from '../controllers/transactionController.js';
 
 const router = express.Router();
+
+// Nova Rota para listar/filtrar transações (Usa o método GET)
+router.get('/transacoes', listarTransacoes);
 
 // Rota para cadastrar transação
 router.post('/transacoes', criarTransacao);
@@ -9,7 +17,7 @@ router.post('/transacoes', criarTransacao);
 // Rota para editar transação
 router.put('/transacoes/:id', editarTransacao);
 
-// Nova Rota para excluir transação (Usa o método DELETE do Express)
+// Rota para excluir transação
 router.delete('/transacoes/:id', excluirTransacao);
 
 export default router;
