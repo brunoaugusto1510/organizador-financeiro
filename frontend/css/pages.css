@@ -1,0 +1,324 @@
+/* =============================================
+   ESTILOS ESPECÍFICOS POR PÁGINA
+   ============================================= */
+
+/* --- Controle de visibilidade de páginas (SPA) --- */
+.pagina {
+  display: none;
+}
+
+.pagina--ativa {
+  display: block;
+}
+
+/* --- Página: Login / Cadastro --- */
+.pagina-auth {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--cor-fundo);
+  padding: var(--espaco-md);
+}
+
+.auth-card {
+  background-color: var(--cor-fundo-card);
+  border-radius: var(--raio-lg);
+  border: 1px solid var(--cor-borda);
+  padding: var(--espaco-xl);
+  width: 100%;
+  max-width: 400px;
+  box-shadow: var(--sombra-elevado);
+}
+
+.auth-card__logo {
+  text-align: center;
+  margin-bottom: var(--espaco-xl);
+}
+
+.auth-card__logo h1 {
+  font-size: 1.4rem;
+  color: var(--cor-primaria);
+}
+
+.auth-card__logo p {
+  font-size: 0.85rem;
+  color: var(--cor-texto-secundario);
+  margin-top: var(--espaco-xs);
+}
+
+.auth-tabs {
+  display: flex;
+  border-bottom: 2px solid var(--cor-borda);
+  margin-bottom: var(--espaco-lg);
+}
+
+.auth-tab {
+  flex: 1;
+  padding: var(--espaco-sm);
+  text-align: center;
+  font-weight: var(--peso-medio);
+  font-size: 0.9rem;
+  color: var(--cor-texto-secundario);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  transition: color var(--transicao), border-color var(--transicao);
+  background: none;
+  border-top: none;
+  border-left: none;
+  border-right: none;
+}
+
+.auth-tab.ativo {
+  color: var(--cor-primaria);
+  border-bottom-color: var(--cor-primaria);
+}
+
+.auth-form {
+  display: none;
+}
+
+.auth-form.ativo {
+  display: block;
+}
+
+.auth-rodape {
+  text-align: center;
+  font-size: 0.8rem;
+  color: var(--cor-texto-placeholder);
+  margin-top: var(--espaco-lg);
+}
+
+/* --- Página: Dashboard --- */
+.pagina-titulo {
+  font-size: 1.3rem;
+  font-weight: var(--peso-bold);
+  color: var(--cor-texto-principal);
+  margin-bottom: var(--espaco-lg);
+}
+
+.pagina-titulo span {
+  color: var(--cor-primaria);
+}
+
+.secao {
+  margin-bottom: var(--espaco-xl);
+}
+
+.secao__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--espaco-md);
+}
+
+.secao__titulo {
+  font-size: 1rem;
+  font-weight: var(--peso-bold);
+  color: var(--cor-texto-principal);
+}
+
+/* --- Filtros de transações --- */
+.filtros {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--espaco-sm);
+  margin-bottom: var(--espaco-md);
+}
+
+.filtro-btn {
+  padding: var(--espaco-xs) var(--espaco-md);
+  border-radius: var(--raio-pill);
+  border: 1.5px solid var(--cor-borda);
+  font-size: 0.85rem;
+  font-weight: var(--peso-medio);
+  color: var(--cor-texto-secundario);
+  background-color: var(--cor-fundo-card);
+  cursor: pointer;
+  transition: all var(--transicao);
+}
+
+.filtro-btn:hover {
+  border-color: var(--cor-primaria);
+  color: var(--cor-primaria);
+}
+
+.filtro-btn.ativo {
+  background-color: var(--cor-primaria);
+  border-color: var(--cor-primaria);
+  color: #ffffff;
+}
+
+.filtros-avancados {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--espaco-sm);
+  align-items: flex-end;
+}
+
+.filtros-avancados .form-grupo {
+  margin-bottom: 0;
+  min-width: 140px;
+  flex: 1;
+}
+
+/* --- Contagem de resultados --- */
+.resultado-contagem {
+  font-size: 0.85rem;
+  color: var(--cor-texto-secundario);
+  margin-bottom: var(--espaco-sm);
+}
+
+.resultado-contagem strong {
+  color: var(--cor-texto-principal);
+}
+
+/* --- Botões de ação na tabela (editar / excluir) --- */
+.acoes-tabela {
+  display: flex;
+  gap: var(--espaco-xs);
+}
+
+.btn-acao {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: var(--raio-sm);
+  border: 1px solid var(--cor-borda);
+  background: var(--cor-fundo-card);
+  color: var(--cor-texto-secundario);
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all var(--transicao);
+}
+
+.btn-acao:hover {
+  background: var(--cor-fundo);
+}
+
+.btn-acao--editar:hover {
+  border-color: var(--cor-primaria);
+  color: var(--cor-primaria);
+}
+
+.btn-acao--excluir:hover {
+  border-color: var(--cor-erro);
+  color: var(--cor-erro);
+  background: var(--cor-erro-bg);
+}
+
+/* =============================================
+   GRÁFICO DE EVOLUÇÃO DO SALDO
+   ============================================= */
+
+.grafico-card {
+  background-color: var(--cor-fundo-card);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio-lg);
+  box-shadow: var(--sombra-card);
+  padding: var(--espaco-md) var(--espaco-md) var(--espaco-sm);
+  overflow: hidden;
+  position: relative;
+}
+
+.grafico-card canvas {
+  display: block;
+  width: 100%;
+  cursor: crosshair;
+}
+
+.grafico-vazio {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 160px;
+  color: var(--cor-texto-secundario);
+  font-size: 0.9rem;
+}
+
+/* Legenda no cabeçalho da seção */
+.grafico-legenda {
+  display: flex;
+  gap: var(--espaco-md);
+  align-items: center;
+}
+
+.legenda-item {
+  font-size: 0.8rem;
+  font-weight: var(--peso-medio);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.legenda-item::before {
+  content: '';
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.legenda-item--entrada {
+  color: var(--cor-entrada-texto);
+}
+
+.legenda-item--entrada::before {
+  background-color: var(--cor-entrada-texto);
+}
+
+.legenda-item--saida {
+  color: var(--cor-saida-texto);
+}
+
+.legenda-item--saida::before {
+  background-color: var(--cor-saida-texto);
+}
+
+/* Tooltip flutuante do gráfico */
+.grafico-tooltip {
+  position: fixed;
+  z-index: 9999;
+  background: var(--cor-fundo-card);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio-md);
+  box-shadow: var(--sombra-elevado);
+  padding: var(--espaco-sm) var(--espaco-md);
+  min-width: 160px;
+  pointer-events: none;
+  transition: opacity 0.15s ease;
+  display: none;
+}
+
+.grafico-tooltip__data {
+  font-size: 0.75rem;
+  color: var(--cor-texto-secundario);
+  margin-bottom: 2px;
+}
+
+.grafico-tooltip__desc {
+  font-size: 0.85rem;
+  font-weight: var(--peso-medio);
+  color: var(--cor-texto-principal);
+  margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 150px;
+}
+
+.grafico-tooltip__valor {
+  font-size: 0.9rem;
+  font-weight: var(--peso-bold);
+}
+
+.grafico-tooltip__saldo {
+  font-size: 0.78rem;
+  color: var(--cor-texto-secundario);
+  margin-top: 3px;
+  border-top: 1px solid var(--cor-borda);
+  padding-top: 3px;
+}

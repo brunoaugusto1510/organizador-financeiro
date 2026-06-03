@@ -1,0 +1,67 @@
+/* =============================================
+   VARIÁVEIS GLOBAIS — Organizador Financeiro
+   Paleta: Verde + Pastéis
+   ============================================= */
+
+:root {
+  /* --- Cores principais --- */
+  --cor-primaria: #2d7a3a;
+  --cor-primaria-hover: #235f2d;
+  --cor-primaria-light: #4caf64;
+
+  /* --- Pastéis semânticos --- */
+  --cor-entrada: #c8e6cc;       /* verde pastel — ganhos */
+  --cor-entrada-texto: #1b5e20;
+  --cor-saida: #fce4ec;          /* rosa pastel — gastos */
+  --cor-saida-texto: #880e4f;
+  --cor-pendente: #fff9c4;       /* amarelo pastel — contas a pagar */
+  --cor-pendente-texto: #f57f17;
+  --cor-info: #e3f2fd;           /* azul pastel — neutro/info */
+  --cor-info-texto: #0d47a1;
+
+  /* --- Neutros --- */
+  --cor-fundo: #f5f5f5;
+  --cor-fundo-card: #ffffff;
+  --cor-borda: #e0e0e0;
+  --cor-texto-principal: #1a1a1a;
+  --cor-texto-secundario: #555555;
+  --cor-texto-placeholder: #9e9e9e;
+
+  /* --- Feedback --- */
+  --cor-sucesso: #2e7d32;
+  --cor-sucesso-bg: #e8f5e9;
+  --cor-erro: #c62828;
+  --cor-erro-bg: #ffebee;
+
+  /* --- Tipografia --- */
+  --fonte-principal: 'Nunito', sans-serif;
+  --tamanho-base: 16px;
+  --peso-normal: 400;
+  --peso-medio: 600;
+  --peso-bold: 700;
+
+  /* --- Espaçamento --- */
+  --espaco-xs: 4px;
+  --espaco-sm: 8px;
+  --espaco-md: 16px;
+  --espaco-lg: 24px;
+  --espaco-xl: 32px;
+  --espaco-2xl: 48px;
+
+  /* --- Bordas --- */
+  --raio-sm: 6px;
+  --raio-md: 10px;
+  --raio-lg: 16px;
+  --raio-pill: 999px;
+
+  /* --- Sombras --- */
+  --sombra-card: 0 2px 8px rgba(0, 0, 0, 0.08);
+  --sombra-elevado: 0 4px 16px rgba(0, 0, 0, 0.12);
+
+  /* --- Transições --- */
+  --transicao: 0.2s ease;
+
+  /* --- Layout --- */
+  --largura-sidebar: 240px;
+  --altura-header: 60px;
+}

@@ -1,0 +1,197 @@
+/* =============================================
+   LAYOUT PRINCIPAL — Mobile First
+   ============================================= */
+
+/* --- App Shell --- */
+.app-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* --- Header --- */
+.header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--altura-header);
+  background-color: var(--cor-fundo-card);
+  border-bottom: 1px solid var(--cor-borda);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--espaco-md);
+  z-index: 100;
+  box-shadow: var(--sombra-card);
+}
+
+.header__logo {
+  display: flex;
+  align-items: center;
+  gap: var(--espaco-sm);
+  font-size: 1.1rem;
+  font-weight: var(--peso-bold);
+  color: var(--cor-primaria);
+}
+
+.header__logo span {
+  font-weight: var(--peso-normal);
+  color: var(--cor-texto-secundario);
+}
+
+.header__menu-btn {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  width: 32px;
+  height: 32px;
+  padding: var(--espaco-xs);
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.header__menu-btn span {
+  display: block;
+  height: 2px;
+  background-color: var(--cor-texto-principal);
+  border-radius: var(--raio-pill);
+  transition: var(--transicao);
+}
+
+.header__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--espaco-sm);
+}
+
+/* --- Sidebar (mobile: oculta por padrão) --- */
+.sidebar {
+  position: fixed;
+  top: var(--altura-header);
+  left: 0;
+  bottom: 0;
+  width: var(--largura-sidebar);
+  background-color: var(--cor-fundo-card);
+  border-right: 1px solid var(--cor-borda);
+  padding: var(--espaco-lg) 0;
+  transform: translateX(-100%);
+  transition: transform var(--transicao);
+  z-index: 90;
+  overflow-y: auto;
+}
+
+.sidebar.aberta {
+  transform: translateX(0);
+  box-shadow: var(--sombra-elevado);
+}
+
+/* Overlay escuro quando sidebar abre no mobile */
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  z-index: 80;
+}
+
+.sidebar-overlay.ativo {
+  display: block;
+}
+
+/* --- Nav da Sidebar --- */
+.nav__lista {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espaco-xs);
+  padding: 0 var(--espaco-md);
+}
+
+.nav__item a {
+  display: flex;
+  align-items: center;
+  gap: var(--espaco-sm);
+  padding: var(--espaco-sm) var(--espaco-md);
+  border-radius: var(--raio-md);
+  font-weight: var(--peso-medio);
+  color: var(--cor-texto-secundario);
+  transition: background-color var(--transicao), color var(--transicao);
+}
+
+.nav__item a:hover,
+.nav__item a.ativo {
+  background-color: var(--cor-entrada);
+  color: var(--cor-primaria);
+}
+
+.nav__item a .nav__icone {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.nav__separador {
+  height: 1px;
+  background-color: var(--cor-borda);
+  margin: var(--espaco-md);
+}
+
+/* --- Conteúdo principal --- */
+.main-content {
+  margin-top: var(--altura-header);
+  padding: var(--espaco-md);
+  flex: 1;
+}
+
+/* --- Footer --- */
+.footer {
+  text-align: center;
+  padding: var(--espaco-md);
+  font-size: 0.8rem;
+  color: var(--cor-texto-placeholder);
+  border-top: 1px solid var(--cor-borda);
+}
+
+/* =============================================
+   MEDIA QUERIES — Tablet (768px+)
+   ============================================= */
+@media (min-width: 768px) {
+  .header__menu-btn {
+    display: none;
+  }
+
+  .sidebar {
+    transform: translateX(0);
+    box-shadow: none;
+  }
+
+  .sidebar-overlay {
+    display: none !important;
+  }
+
+  .app-container {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .header {
+    padding: 0 var(--espaco-lg);
+  }
+
+  .main-content {
+    margin-left: var(--largura-sidebar);
+    padding: var(--espaco-lg);
+  }
+}
+
+/* =============================================
+   MEDIA QUERIES — Desktop (1024px+)
+   ============================================= */
+@media (min-width: 1024px) {
+  .main-content {
+    padding: var(--espaco-xl);
+    max-width: 1200px;
+  }
+}

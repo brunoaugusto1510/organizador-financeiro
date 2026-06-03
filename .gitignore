@@ -1,0 +1,4 @@
+temp_repo/
+node_modules/
+.env
+*.log
