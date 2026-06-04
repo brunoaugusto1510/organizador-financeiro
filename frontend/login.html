@@ -3,14 +3,18 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Entre na sua conta ou cadastre-se no Organizador Financeiro." />
+    <meta name="description" content="Entre na sua conta ou cadastre-se no FinançasFácil." />
+    <meta name="theme-color" content="#000000" />
 
-    <title>Login — FinançasFácil</title>
+    <title>Entrar — FinançasFácil</title>
 
-    <!-- Fonte: Nunito -->
+    <!-- Fonte: Geist -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap" rel="stylesheet" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
 
     <!-- CSS -->
     <link rel="stylesheet" href="css/variables.css" />
@@ -36,8 +40,8 @@
 
         <!-- Logo / Cabeçalho -->
         <header class="auth-card__logo">
-          <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24"
-               fill="none" stroke="var(--cor-primaria)" stroke-width="2"
+          <svg xmlns="http://www.w3.org/2000/svg" width="42" height="42" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="1.75"
                stroke-linecap="round" stroke-linejoin="round"
                aria-hidden="true" focusable="false">
             <line x1="12" y1="1" x2="12" y2="23"></line>
@@ -53,14 +57,16 @@
                   id="tab-login"
                   role="tab"
                   aria-selected="true"
-                  aria-controls="form-login">
+                  aria-controls="form-login"
+                  type="button">
             Entrar
           </button>
           <button class="auth-tab"
                   id="tab-cadastro"
                   role="tab"
                   aria-selected="false"
-                  aria-controls="form-cadastro">
+                  aria-controls="form-cadastro"
+                  type="button">
             Criar conta
           </button>
         </div>
@@ -78,7 +84,7 @@
               type="email"
               id="login-email"
               name="email"
-              placeholder="seu@email.com"
+              placeholder="voce@email.com"
               autocomplete="email"
               required
             />
@@ -133,7 +139,7 @@
               type="email"
               id="cadastro-email"
               name="email"
-              placeholder="seu@email.com"
+              placeholder="voce@email.com"
               autocomplete="email"
               required
             />
@@ -173,7 +179,7 @@
 
         </form>
 
-        <!-- Rodapé da auth-card -->
+        <!-- Rodapé -->
         <p class="auth-rodape">
           Projeto acadêmico &mdash; FinançasFácil &copy; 2025
         </p>

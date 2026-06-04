@@ -126,15 +126,18 @@ async function carregarResumo() {
 }
 
 function renderizarResumo({ saldo, entradas, saidas, pendentes }) {
-  const set = (id, valor) => {
-    const el = document.getElementById(id);
-    if (el) el.textContent = formatarBRL(valor ?? 0);
-  };
+  const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = formatarBRL(v ?? 0); };
+  set('saldo-valor', saldo); set('entradas-valor', entradas);
+  set('saidas-valor', saidas); set('pendentes-valor', pendentes);
 
-  set('saldo-valor',    saldo);
-  set('entradas-valor', entradas);
-  set('saidas-valor',   saidas);
-  set('pendentes-valor', pendentes);
+  const hero = document.getElementById('card-saldo-total');
+  if (hero) hero.innerHTML = `
+    <p class="card__titulo">Saldo total</p>
+    <p class="card-saldo-total__valor">${formatarBRL(saldo ?? 0)}</p>
+    <p class="card-saldo-total__saude">Sua saúde financeira está ${(saldo ?? 0) >= 0 ? 'em dia' : 'no vermelho'}</p>`;
+
+  criarDonut('grafico-donut-resumo', ['Entradas', 'Saídas'], [entradas ?? 0, saidas ?? 0]);
+  renderizarBarraCategorias('barra-categorias-dashboard', todasTransacoes.length ? todasTransacoes : DEMO.transacoes);
 }
 
 // --- Transações recentes ---
@@ -155,41 +158,8 @@ async function carregarTransacoesRecentes() {
 function renderizarTransacoesRecentes(lista) {
   const container = document.getElementById('lista-transacoes-recentes');
   if (!container) return;
-
-  if (!lista.length) {
-    container.innerHTML = criarEstadoVazio('Nenhuma transação registrada ainda.');
-    return;
-  }
-
-  // Monta a tabela dinamicamente
-  const linhas = lista.map(t => `
-    <tr>
-      <td>${formatarData(t.data)}</td>
-      <td>${t.descricao}</td>
-      <td><span class="badge-categoria">${t.categoria ?? '—'}</span></td>
-      <td>${criarBadge(t.tipo)}</td>
-      <td class="valor-cell valor--${t.tipo}">${formatarBRL(t.valor)}</td>
-    </tr>
-  `).join('');
-
-  container.innerHTML = `
-    <div class="tabela-wrapper">
-      <table class="tabela" aria-label="Transações recentes">
-        <thead>
-          <tr>
-            <th scope="col">Data</th>
-            <th scope="col">Descrição</th>
-            <th scope="col">Categoria</th>
-            <th scope="col">Tipo</th>
-            <th scope="col">Valor</th>
-          </tr>
-        </thead>
-        <tbody id="tbody-transacoes">
-          ${linhas}
-        </tbody>
-      </table>
-    </div>
-  `;
+  if (!lista.length) { container.innerHTML = criarEstadoVazio('Nenhuma transação registrada ainda.'); return; }
+  container.innerHTML = lista.map(transacaoCard).join('');
 }
 
 // ============================================================
@@ -217,6 +187,15 @@ function inicializarNavegacao() {
     if (linkAtivo) {
       linkAtivo.classList.add('ativo');
       linkAtivo.setAttribute('aria-current', 'page');
+    }
+
+    // Render lazy da tela alvo
+    switch (alvo) {
+      case 'categorias':    renderizarPaginaCategorias(); break;
+      case 'investimentos': renderizarPaginaInvestimentos(); break;
+      case 'assinaturas':   renderizarPaginaAssinaturas(); break;
+      case 'bancos':        renderizarPaginaBancos(); break;
+      case 'chat':          inicializarChat(); break;
     }
   }
 
@@ -585,50 +564,33 @@ function renderizarTabelaTransacoes(lista) {
       : '';
   }
 
-  if (!lista.length) {
-    container.innerHTML = criarEstadoVazio('Nenhuma transação encontrada para os filtros aplicados.');
-    return;
-  }
+  if (!lista.length) { container.innerHTML = criarEstadoVazio('Nenhuma transação encontrada.'); return; }
+  container.innerHTML = lista.map(t => `
+    <div class="transacao-card" data-id="${t.id}">
+      ${avatarMerchant(t.descricao)}
+      <div class="transacao-card__info">
+        <span class="transacao-card__desc">${t.descricao}</span>
+        <span class="transacao-card__meta">${labelCategoria(t.categoria)} • ${formatarData(t.data)}</span>
+      </div>
+      <span class="transacao-card__valor valor--${t.tipo}">${formatarBRL(t.valor)}</span>
+      <div class="acoes-tabela">
+        <button class="btn-acao btn-acao--editar" onclick="editarTransacao('${t.id}')" aria-label="Editar">✏️</button>
+        <button class="btn-acao btn-acao--excluir" onclick="excluirTransacao('${t.id}')" aria-label="Excluir">🗑️</button>
+      </div>
+    </div>`).join('');
+}
 
-  const linhas = lista.map(t => `
-    <tr data-id="${t.id}">
-      <td>${formatarData(t.data)}</td>
-      <td><span class="descricao-cell">${t.descricao}</span></td>
-      <td><span class="badge-categoria">${labelCategoria(t.categoria)}</span></td>
-      <td>${criarBadge(t.tipo)}</td>
-      <td class="valor-cell valor--${t.tipo}">${formatarBRL(t.valor)}</td>
-      <td>
-        <div class="acoes-tabela">
-          <button class="btn-acao btn-acao--editar"
-                  onclick="editarTransacao('${t.id}')"
-                  aria-label="Editar transação ${t.descricao}"
-                  title="Editar">✏️</button>
-          <button class="btn-acao btn-acao--excluir"
-                  onclick="excluirTransacao('${t.id}')"
-                  aria-label="Excluir transação ${t.descricao}"
-                  title="Excluir">🗑️</button>
-        </div>
-      </td>
-    </tr>
-  `).join('');
-
-  container.innerHTML = `
-    <div class="tabela-wrapper">
-      <table class="tabela" aria-label="Lista de transações">
-        <thead>
-          <tr>
-            <th scope="col">Data</th>
-            <th scope="col">Descrição</th>
-            <th scope="col">Categoria</th>
-            <th scope="col">Tipo</th>
-            <th scope="col">Valor</th>
-            <th scope="col"><span class="sr-only">Ações</span></th>
-          </tr>
-        </thead>
-        <tbody>${linhas}</tbody>
-      </table>
-    </div>
-  `;
+// ============================================================
+// TELA CATEGORIAS
+// ============================================================
+function renderizarPaginaCategorias() {
+  const fonte = todasTransacoes.length ? todasTransacoes : DEMO.transacoes;
+  renderizarBarraCategorias('barra-categorias-pagina', fonte);
+  const dados = agregarPorCategoria(fonte);
+  criarDonut('grafico-donut-categorias', dados.map(d => labelCategoria(d.categoria)), dados.map(d => d.total));
+  const lista = document.getElementById('lista-categorias');
+  if (lista) lista.innerHTML = dados.map(d => `
+    <div class="investimento-row"><span>${labelCategoria(d.categoria)}</span><strong>${formatarBRL(d.total)}</strong></div>`).join('') || criarEstadoVazio('Sem gastos no período.');
 }
 
 /** Abre o modal preenchido para edição */
@@ -787,4 +749,152 @@ const LABELS_CATEGORIA = {
 
 function labelCategoria(cat) {
   return LABELS_CATEGORIA[cat] ?? cat ?? '—';
+}
+
+// ============================================================
+// HELPERS DE RENDER (cards do dashboard)
+// ============================================================
+/** Cor determinística a partir de um nome (para avatar). */
+function corDeNome(nome) {
+  const cores = ['#10b981','#f472b6','#fbbf24','#60a5fa','#a78bfa','#fb923c','#22d3ee'];
+  let h = 0;
+  for (let i = 0; i < nome.length; i++) h = nome.charCodeAt(i) + ((h << 5) - h);
+  return cores[Math.abs(h) % cores.length];
+}
+
+/** HTML de um avatar circular com a inicial. */
+function avatarMerchant(nome) {
+  const inicial = (nome || '?').trim().charAt(0).toUpperCase();
+  return `<span class="avatar-merchant" style="background:${corDeNome(nome || '?')}">${inicial}</span>`;
+}
+
+/** Card de transação. */
+function transacaoCard(t) {
+  const sinal = t.tipo === 'entrada' ? '+' : t.tipo === 'saida' ? '−' : '';
+  return `
+    <div class="transacao-card">
+      ${avatarMerchant(t.descricao)}
+      <div class="transacao-card__info">
+        <span class="transacao-card__desc">${t.descricao}</span>
+        <span class="transacao-card__meta">${labelCategoria(t.categoria)} • ${formatarData(t.data)}</span>
+      </div>
+      <span class="transacao-card__valor valor--${t.tipo}">${sinal} ${formatarBRL(t.valor)}</span>
+    </div>`;
+}
+
+/** Agrega transações de saída por categoria → [{categoria, total}] desc. */
+function agregarPorCategoria(transacoes) {
+  const mapa = {};
+  transacoes.filter(t => t.tipo === 'saida').forEach(t => {
+    const c = t.categoria || 'outros';
+    mapa[c] = (mapa[c] || 0) + t.valor;
+  });
+  return Object.entries(mapa).map(([categoria, total]) => ({ categoria, total }))
+    .sort((a, b) => b.total - a.total);
+}
+
+/** Renderiza a barra multicolor de categorias num container. */
+function renderizarBarraCategorias(containerId, transacoes) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  const dados = agregarPorCategoria(transacoes);
+  const total = dados.reduce((s, d) => s + d.total, 0) || 1;
+  const cores = ['#f472b6','#a78bfa','#fbbf24','#60a5fa','#34d399','#fb923c'];
+  const segs = dados.map((d, i) => `<div class="barra-categorias__seg" style="width:${(d.total/total*100).toFixed(1)}%;background:${cores[i%cores.length]}"></div>`).join('');
+  const legenda = dados.map((d, i) => `<span class="barra-categorias__item"><span class="barra-categorias__dot" style="background:${cores[i%cores.length]}"></span>${labelCategoria(d.categoria)} — ${formatarBRL(d.total)}</span>`).join('');
+  el.innerHTML = `<div class="barra-categorias__trilha">${segs}</div><div class="barra-categorias__legenda">${legenda}</div>`;
+}
+
+// ============================================================
+// TELAS MOCK — Investimentos, Assinaturas, Bancos
+// ============================================================
+async function renderizarPaginaInvestimentos() {
+  const el = document.getElementById('card-investimentos');
+  if (!el) return;
+  const dados = await InvestimentosAPI.listar();
+  const total = dados.reduce((s, d) => s + d.valor, 0);
+  el.innerHTML = `
+    <div class="card-saldo-total">
+      <p class="card__titulo">Total investido • ${dados.length} ativos</p>
+      <p class="card-saldo-total__valor">${formatarBRL(total)}</p>
+    </div>
+    <div class="grid-graficos">
+      <section class="secao secao--grafico"><canvas id="grafico-donut-invest" height="240" role="img" aria-label="Distribuição dos investimentos"></canvas></section>
+      <section class="secao">${dados.map(d => `
+        <div class="investimento-row">
+          <span>${d.classe}</span>
+          <span>${formatarBRL(d.valor)}
+            <span class="${d.variacaoPct >= 0 ? 'variacao--alta' : 'variacao--baixa'}">
+              ${d.variacaoPct >= 0 ? '↑' : '↓'} ${Math.abs(d.variacaoPct)}%
+            </span>
+          </span>
+        </div>`).join('')}</section>
+    </div>`;
+  criarDonut('grafico-donut-invest', dados.map(d => d.classe), dados.map(d => d.valor));
+}
+
+async function renderizarPaginaAssinaturas() {
+  const el = document.getElementById('lista-assinaturas');
+  if (!el) return;
+  const dados = await AssinaturasAPI.listar();
+  const hoje = new Date();
+  el.innerHTML = dados.map(a => {
+    const dias = Math.max(0, Math.ceil((new Date(a.proximaCobranca) - hoje) / 86400000));
+    return `<div class="assinatura-card">
+      ${avatarMerchant(a.nome)}
+      <p class="transacao-card__desc">${a.nome}</p>
+      <p class="assinatura-card__valor">${formatarBRL(a.valor)}</p>
+      <p class="assinatura-card__prazo">em ${dias} dias</p>
+    </div>`;
+  }).join('');
+}
+
+async function renderizarPaginaBancos() {
+  const el = document.getElementById('lista-bancos');
+  if (!el) return;
+  const dados = await BancosAPI.listar();
+  el.innerHTML = dados.map(b => `
+    <div class="banco-row">${avatarMerchant(b.nome)}<span>${b.nome}</span><span class="banco-row__saldo">${formatarBRL(b.saldo)}</span></div>`).join('');
+}
+
+// ============================================================
+// TELA CHAT IA (mock)
+// ============================================================
+const CHAT_CHIPS = ['Me ajuda com um plano', 'Tô apertado de grana', 'Quanto gastei esse mês?'];
+
+function adicionarBolhaChat(texto, autor) {
+  const janela = document.getElementById('chat-janela');
+  if (!janela) return;
+  const div = document.createElement('div');
+  div.className = `chat-bubble chat-bubble--${autor}`;
+  div.textContent = texto;
+  janela.appendChild(div);
+  janela.scrollTop = janela.scrollHeight;
+}
+
+async function enviarMensagemChat(texto) {
+  if (!texto.trim()) return;
+  adicionarBolhaChat(texto, 'usuario');
+  const { resposta } = await ChatAPI.enviar(texto);
+  adicionarBolhaChat(resposta, 'assistente');
+}
+
+function inicializarChat() {
+  const chips = document.getElementById('chat-chips');
+  if (chips && !chips.dataset.pronto) {
+    chips.innerHTML = CHAT_CHIPS.map(c => `<button class="chat-chip" type="button">${c}</button>`).join('');
+    chips.querySelectorAll('.chat-chip').forEach(b => b.addEventListener('click', () => enviarMensagemChat(b.textContent)));
+    chips.dataset.pronto = '1';
+  }
+  const form = document.getElementById('chat-form');
+  if (form && !form.dataset.pronto) {
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const input = document.getElementById('chat-input');
+      enviarMensagemChat(input.value);
+      input.value = '';
+    });
+    form.dataset.pronto = '1';
+    adicionarBolhaChat('Oi! Sou seu assistente financeiro. Como posso te ajudar com suas finanças?', 'assistente');
+  }
 }

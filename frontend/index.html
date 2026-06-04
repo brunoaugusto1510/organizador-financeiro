@@ -1,428 +1,184 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Organizador Financeiro — controle seus ganhos, gastos e contas a pagar de forma simples e visual." />
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Dashboard do FinançasFácil — visão geral das suas finanças." />
+  <title>Dashboard — FinançasFácil</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/variables.css" />
+  <link rel="stylesheet" href="css/reset.css" />
+  <link rel="stylesheet" href="css/components.css" />
+  <link rel="stylesheet" href="css/layout.css" />
+  <link rel="stylesheet" href="css/pages.css" />
+</head>
+<body>
+  <div class="spinner-overlay oculto" id="spinner" role="status" aria-label="Carregando..."><div class="spinner"></div></div>
+  <div class="toast-container" id="toast-container" aria-live="polite" aria-atomic="true"></div>
 
-    <title>Organizador Financeiro</title>
+  <div class="app-container">
+    <header class="header" role="banner">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <button class="header__menu-btn" id="menu-btn" aria-label="Abrir menu" aria-controls="sidebar" aria-expanded="false" type="button"><span></span><span></span><span></span></button>
+        <a href="#dashboard" class="header__logo">FinançasFácil <span>beta</span></a>
+      </div>
+      <div class="header__actions">
+        <button class="btn btn--primario" id="btn-nova-transacao" type="button">+ Nova transação</button>
+        <span id="header-usuario"></span>
+      </div>
+    </header>
 
-    <!-- Fonte: Nunito (Google Fonts) -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap" rel="stylesheet" />
-
-    <!-- CSS -->
-    <link rel="stylesheet" href="css/variables.css" />
-    <link rel="stylesheet" href="css/reset.css" />
-    <link rel="stylesheet" href="css/layout.css" />
-    <link rel="stylesheet" href="css/components.css" />
-    <link rel="stylesheet" href="css/pages.css" />
-  </head>
-
-  <body>
-
-    <!-- =============================
-         SPINNER DE LOADING GLOBAL
-         ============================= -->
-    <div class="spinner-overlay oculto" id="spinner" role="status" aria-label="Carregando...">
-      <div class="spinner"></div>
-    </div>
-
-    <!-- =============================
-         CONTAINER DE TOASTS
-         ============================= -->
-    <div class="toast-container" id="toast-container" aria-live="polite" aria-atomic="true"></div>
-
-    <!-- =============================
-         OVERLAY DA SIDEBAR (mobile)
-         ============================= -->
     <div class="sidebar-overlay" id="sidebar-overlay" aria-hidden="true"></div>
 
-    <!-- =============================
-         APP SHELL
-         ============================= -->
-    <div class="app-container">
+    <aside class="sidebar" id="sidebar" aria-label="Navegação principal">
+      <nav class="nav">
+        <ul class="nav__lista">
+          <li class="nav__item"><a href="#dashboard" class="ativo">Visão geral</a></li>
+          <li class="nav__item"><a href="#transacoes">Transações</a></li>
+          <li class="nav__item"><a href="#categorias">Categorias</a></li>
+          <li class="nav__item"><a href="#investimentos">Investimentos</a></li>
+          <li class="nav__item"><a href="#assinaturas">Assinaturas</a></li>
+          <li class="nav__item"><a href="#bancos">Bancos</a></li>
+          <li class="nav__item"><a href="#chat">Assistente IA</a></li>
+        </ul>
+        <div class="nav__separador"></div>
+        <ul class="nav__lista">
+          <li class="nav__item"><a href="login.html" id="nav-sair">Sair</a></li>
+        </ul>
+      </nav>
+    </aside>
 
-      <!-- HEADER -->
-      <header class="header" role="banner">
-        <div class="header__logo">
-          <!-- Ícone de folha/dinheiro em SVG inline -->
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-               fill="none" stroke="currentColor" stroke-width="2"
-               stroke-linecap="round" stroke-linejoin="round"
-               aria-hidden="true" focusable="false">
-            <line x1="12" y1="1" x2="12" y2="23"></line>
-            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
-          </svg>
-          FinançasFácil <span>| Painel</span>
-        </div>
-
-        <div class="header__actions">
-          <!-- Avatar do usuário (preenchido via JS após login) -->
-          <span id="header-usuario" aria-label="Usuário logado"></span>
-
-          <!-- Botão hamburguer (mobile only) -->
-          <button class="header__menu-btn" id="menu-btn"
-                  aria-label="Abrir menu de navegação"
-                  aria-expanded="false"
-                  aria-controls="sidebar">
-            <span></span>
-            <span></span>
-            <span></span>
-          </button>
-        </div>
-      </header>
-
-      <!-- SIDEBAR / NAV -->
-      <aside class="sidebar" id="sidebar" aria-label="Menu de navegação">
-        <nav role="navigation">
-          <ul class="nav__lista" role="list">
-
-            <li class="nav__item" role="listitem">
-              <a href="#dashboard" class="ativo" aria-current="page" id="nav-dashboard">
-                <!-- Ícone: casa -->
-                <svg class="nav__icone" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
-                     fill="none" stroke="currentColor" stroke-width="2"
-                     stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                  <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
-                  <polyline points="9 22 9 12 15 12 15 22"></polyline>
-                </svg>
-                Dashboard
-              </a>
-            </li>
-
-            <li class="nav__item" role="listitem">
-              <a href="#transacoes" id="nav-transacoes">
-                <!-- Ícone: lista -->
-                <svg class="nav__icone" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
-                     fill="none" stroke="currentColor" stroke-width="2"
-                     stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                  <line x1="8" y1="6" x2="21" y2="6"></line>
-                  <line x1="8" y1="12" x2="21" y2="12"></line>
-                  <line x1="8" y1="18" x2="21" y2="18"></line>
-                  <line x1="3" y1="6" x2="3.01" y2="6"></line>
-                  <line x1="3" y1="12" x2="3.01" y2="12"></line>
-                  <line x1="3" y1="18" x2="3.01" y2="18"></line>
-                </svg>
-                Transações
-              </a>
-            </li>
-
-            <li class="nav__item" role="listitem">
-              <a href="#contas" id="nav-contas">
-                <!-- Ícone: calendário -->
-                <svg class="nav__icone" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
-                     fill="none" stroke="currentColor" stroke-width="2"
-                     stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                  <line x1="16" y1="2" x2="16" y2="6"></line>
-                  <line x1="8" y1="2" x2="8" y2="6"></line>
-                  <line x1="3" y1="10" x2="21" y2="10"></line>
-                </svg>
-                Contas a Pagar
-              </a>
-            </li>
-
-            <hr class="nav__separador" role="separator" />
-
-            <li class="nav__item" role="listitem">
-              <a href="login.html" id="nav-sair">
-                <!-- Ícone: sair -->
-                <svg class="nav__icone" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
-                     fill="none" stroke="currentColor" stroke-width="2"
-                     stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                  <polyline points="16 17 21 12 16 7"></polyline>
-                  <line x1="21" y1="12" x2="9" y2="12"></line>
-                </svg>
-                Sair
-              </a>
-            </li>
-
-          </ul>
-        </nav>
-      </aside>
-
-      <!-- CONTEÚDO PRINCIPAL -->
-      <main class="main-content" id="main-content" role="main">
-
-        <!-- ── SEÇÃO: DASHBOARD ── -->
-        <section id="dashboard" class="pagina pagina--ativa" aria-labelledby="titulo-dashboard">
-
-          <h1 class="pagina-titulo" id="titulo-dashboard">
-            Olá, <span id="nome-usuario">Davi</span> 👋
-          </h1>
-
-          <!-- Cards de resumo financeiro -->
-          <section class="secao" aria-labelledby="titulo-resumo">
-            <header class="secao__header">
-              <h2 class="secao__titulo" id="titulo-resumo">Resumo do Mês</h2>
-            </header>
-
-            <div class="cards-resumo" role="list">
-
-              <article class="card" role="listitem" aria-label="Saldo atual">
-                <p class="card__titulo">Saldo Atual</p>
-                <p class="card__valor" id="saldo-valor">R$ —</p>
-              </article>
-
-              <article class="card card--entrada" role="listitem" aria-label="Total de entradas">
-                <p class="card__titulo">Entradas</p>
-                <p class="card__valor" id="entradas-valor">R$ —</p>
-              </article>
-
-              <article class="card card--saida" role="listitem" aria-label="Total de saídas">
-                <p class="card__titulo">Saídas</p>
-                <p class="card__valor" id="saidas-valor">R$ —</p>
-              </article>
-
-              <article class="card card--pendente" role="listitem" aria-label="Contas a pagar">
-                <p class="card__titulo">A Pagar</p>
-                <p class="card__valor" id="pendentes-valor">R$ —</p>
-              </article>
-
-            </div>
-          </section>
-
-          <!-- Transações recentes (placeholder para a Etapa 5) -->
-          <section class="secao" aria-labelledby="titulo-recentes">
-            <header class="secao__header">
-              <h2 class="secao__titulo" id="titulo-recentes">Transações Recentes</h2>
-              <button class="btn btn--secundario" id="btn-nova-transacao" aria-label="Adicionar nova transação">
-                + Nova Transação
-              </button>
-            </header>
-
-            <!-- A listagem será injetada via JS -->
-            <div id="lista-transacoes-recentes">
-              <div class="estado-vazio" role="status">
-                <p>Nenhuma transação encontrada.</p>
-              </div>
-            </div>
-
-          </section>
-
-        </section>
-        <!-- ── FIM DASHBOARD ── -->
-
-        <!-- ── SEÇÃO: TRANSAÇÕES ── -->
-        <section id="transacoes" class="pagina" aria-labelledby="titulo-transacoes">
-
-          <header class="secao__header">
-            <h1 class="pagina-titulo" id="titulo-transacoes">Transações</h1>
-            <button class="btn btn--primario" id="btn-nova-transacao-lista"
-                    aria-label="Adicionar nova transação">
-              + Nova Transação
-            </button>
-          </header>
-
-          <!-- Filtros rápidos por tipo -->
-          <div class="filtros" role="group" aria-label="Filtrar por tipo de transação">
-            <button class="filtro-btn ativo" data-filtro-tipo="todos"   id="filtro-todos">Todos</button>
-            <button class="filtro-btn"       data-filtro-tipo="entrada" id="filtro-entrada">↑ Entradas</button>
-            <button class="filtro-btn"       data-filtro-tipo="saida"   id="filtro-saida">↓ Saídas</button>
-            <button class="filtro-btn"       data-filtro-tipo="pendente" id="filtro-pendente">⏳ A Pagar</button>
-          </div>
-
-          <!-- Filtros avançados -->
-          <div class="filtros-avancados" role="search">
-            <div class="form-grupo">
-              <label for="filtro-busca">Buscar</label>
-              <input type="search" id="filtro-busca"
-                     placeholder="Descrição ou categoria..."
-                     aria-label="Buscar transação" />
-            </div>
-            <div class="form-grupo">
-              <label for="filtro-data-inicio">De</label>
-              <input type="date" id="filtro-data-inicio" aria-label="Data inicial" />
-            </div>
-            <div class="form-grupo">
-              <label for="filtro-data-fim">Até</label>
-              <input type="date" id="filtro-data-fim" aria-label="Data final" />
-            </div>
-            <button class="btn btn--secundario" id="btn-limpar-filtros"
-                    aria-label="Limpar todos os filtros">
-              Limpar
-            </button>
-          </div>
-
-          <!-- Contagem de resultados -->
-          <p class="resultado-contagem" id="resultado-contagem" aria-live="polite"></p>
-
-          <!-- Tabela injetada via JS -->
-          <div id="container-transacoes-lista">
-            <div class="estado-vazio" role="status">
-              <p>Carregando transações...</p>
-            </div>
-          </div>
-
-        </section>
-        <!-- ── FIM TRANSAÇÕES ── -->
-
-        <!-- ── SEÇÃO: CONTAS A PAGAR ── -->
-        <section id="contas" class="pagina" aria-labelledby="titulo-contas">
-          <header class="header-acao">
-            <h1 class="pagina-titulo" id="titulo-contas">Contas a Pagar</h1>
-            <button class="btn btn--primario" onclick="abrirModal({tipo: 'pendente'})">
-              + Nova Conta
-            </button>
-          </header>
-
-          <!-- Resumo de Contas -->
-          <div class="cards-grid">
-            <article class="card">
-              <div class="card__header">
-                <h3>Total a Pagar</h3>
-                <span class="icone icone--pendente">⏳</span>
-              </div>
-              <p class="card__valor valor--pendente" id="total-contas-pendentes">R$ 0,00</p>
-            </article>
-          </div>
-
-          <!-- Tabela injetada via JS -->
-          <div id="container-contas-lista">
-            <div class="estado-vazio" role="status">
-              <p>Carregando contas a pagar...</p>
-            </div>
+    <main class="main-content" role="main">
+      <!-- 1. VISÃO GERAL -->
+      <section class="pagina pagina--ativa" id="dashboard">
+        <h1 class="pagina-titulo">Olá, <span id="nome-usuario">Usuário</span></h1>
+        <div id="card-saldo-total" class="card-saldo-total"></div>
+        <section class="secao">
+          <div class="cards-resumo">
+            <article class="card card--entrada"><p class="card__titulo">Entradas</p><p class="card__valor" id="entradas-valor">—</p></article>
+            <article class="card card--saida"><p class="card__titulo">Saídas</p><p class="card__valor" id="saidas-valor">—</p></article>
+            <article class="card card--pendente"><p class="card__titulo">A pagar</p><p class="card__valor" id="pendentes-valor">—</p></article>
+            <article class="card"><p class="card__titulo">Saldo</p><p class="card__valor" id="saldo-valor">—</p></article>
           </div>
         </section>
-      </main>
-      <!-- FIM MAIN -->
-
-      <!-- FOOTER -->
-      <footer class="footer" role="contentinfo">
-        <p>&copy; 2025 FinançasFácil — Projeto Acadêmico</p>
-      </footer>
-
-    </div>
-    <!-- FIM APP SHELL -->
-
-    <!-- =============================
-         MODAL: NOVA / EDITAR TRANSAÇÃO
-         ============================= -->
-    <div class="modal-overlay oculto" id="modal-transacao" role="dialog"
-         aria-modal="true" aria-labelledby="modal-transacao-titulo">
-      <article class="modal">
-
-        <header class="modal__header">
-          <h2 class="modal__titulo" id="modal-transacao-titulo">Nova Transação</h2>
-          <button class="modal__fechar" id="modal-fechar" aria-label="Fechar modal">&times;</button>
-        </header>
-
-        <!-- Seletor de tipo (entrada / saída / conta a pagar) -->
-        <div class="tipo-selector" role="group" aria-label="Tipo de transação">
-          <button type="button" class="tipo-btn tipo-btn--entrada ativo"
-                  data-tipo="entrada" id="tipo-entrada">
-            ↑ Entrada
-          </button>
-          <button type="button" class="tipo-btn tipo-btn--saida"
-                  data-tipo="saida" id="tipo-saida">
-            ↓ Saída
-          </button>
-          <button type="button" class="tipo-btn tipo-btn--pendente"
-                  data-tipo="pendente" id="tipo-pendente">
-            ⏳ A Pagar
-          </button>
+        <div class="grid-graficos">
+          <section class="secao secao--grafico"><h2 class="secao__titulo">Entradas × Saídas</h2><canvas id="grafico-donut-resumo" height="220" role="img" aria-label="Gráfico de entradas e saídas"></canvas></section>
+          <section class="secao secao--grafico"><h2 class="secao__titulo">Gastos por categoria</h2><div id="barra-categorias-dashboard"></div></section>
         </div>
+        <section class="secao">
+          <div class="secao__header"><h2 class="secao__titulo">Últimas transações</h2><a class="btn btn--secundario" href="#transacoes">Ver todas</a></div>
+          <div id="lista-transacoes-recentes"></div>
+        </section>
+      </section>
 
-        <form id="form-transacao" novalidate>
-          <!-- Campo oculto: tipo selecionado -->
-          <input type="hidden" id="transacao-tipo" name="tipo" value="entrada" />
-          <!-- Campo oculto: ID para edição -->
-          <input type="hidden" id="transacao-id" name="id" value="" />
+      <!-- 2. TRANSAÇÕES -->
+      <section class="pagina" id="transacoes">
+        <h1 class="pagina-titulo">Transações</h1>
+        <div class="filtros" role="group" aria-label="Filtros">
+          <button class="filtro-btn ativo" id="filtro-todos" data-filtro-tipo="todos" type="button">Todas</button>
+          <button class="filtro-btn" data-filtro-tipo="entrada" type="button">Entradas</button>
+          <button class="filtro-btn" data-filtro-tipo="saida" type="button">Saídas</button>
+          <button class="filtro-btn" data-filtro-tipo="pendente" type="button">Pendentes</button>
+          <input type="search" id="filtro-busca" placeholder="Buscar..." aria-label="Buscar transações" />
+          <input type="date" id="filtro-data-inicio" aria-label="Data início" />
+          <input type="date" id="filtro-data-fim" aria-label="Data fim" />
+          <button class="btn btn--secundario" id="btn-limpar-filtros" type="button">Limpar</button>
+        </div>
+        <p class="resultado-contagem" id="resultado-contagem" aria-live="polite"></p>
+        <div id="container-transacoes-lista"></div>
+      </section>
 
-          <div class="form-grupo">
-            <label for="transacao-descricao">Descrição</label>
-            <input type="text" id="transacao-descricao" name="descricao"
-                   placeholder="Ex: Salário, Aluguel, Supermercado..."
-                   required maxlength="100" />
-            <span class="form-erro-msg" id="erro-descricao" aria-live="polite"></span>
-          </div>
+      <!-- 3. CATEGORIAS -->
+      <section class="pagina" id="categorias">
+        <h1 class="pagina-titulo">Gastos por categoria</h1>
+        <div id="barra-categorias-pagina"></div>
+        <div class="grid-graficos">
+          <section class="secao secao--grafico"><canvas id="grafico-donut-categorias" height="240" role="img" aria-label="Gráfico de gastos por categoria"></canvas></section>
+          <section class="secao"><div id="lista-categorias"></div></section>
+        </div>
+      </section>
 
-          <div class="form-row">
-            <div class="form-grupo">
-              <label for="transacao-valor">Valor (R$)</label>
-              <input type="number" id="transacao-valor" name="valor"
-                     placeholder="0,00" step="0.01" min="0.01"
-                     required />
-              <span class="form-erro-msg" id="erro-valor" aria-live="polite"></span>
-            </div>
+      <!-- 4. INVESTIMENTOS -->
+      <section class="pagina" id="investimentos">
+        <h1 class="pagina-titulo">Investimentos</h1>
+        <div id="card-investimentos"></div>
+      </section>
 
-            <div class="form-grupo">
-              <label for="transacao-data">Data</label>
-              <input type="date" id="transacao-data" name="data" required />
-              <span class="form-erro-msg" id="erro-data" aria-live="polite"></span>
-            </div>
-          </div>
+      <!-- 5. ASSINATURAS -->
+      <section class="pagina" id="assinaturas">
+        <h1 class="pagina-titulo">Assinaturas</h1>
+        <div id="lista-assinaturas" class="grid-assinaturas"></div>
+      </section>
 
-          <div class="form-grupo">
-            <label for="transacao-categoria">Categoria</label>
-            <select id="transacao-categoria" name="categoria" required>
-              <option value="" disabled selected>Selecione uma categoria</option>
-              <optgroup label="Renda">
-                <option value="salario">Salário</option>
-                <option value="renda_extra">Renda Extra / Freelance</option>
-                <option value="investimento">Rendimento / Investimento</option>
-              </optgroup>
-              <optgroup label="Gastos">
-                <option value="moradia">Moradia</option>
-                <option value="alimentacao">Alimentação</option>
-                <option value="transporte">Transporte</option>
-                <option value="saude">Saúde</option>
-                <option value="educacao">Educação</option>
-                <option value="lazer">Lazer</option>
-                <option value="vestuario">Vestuário</option>
-                <option value="utilidades">Utilidades / Contas</option>
-                <option value="outros">Outros</option>
-              </optgroup>
-            </select>
-            <span class="form-erro-msg" id="erro-categoria" aria-live="polite"></span>
-          </div>
+      <!-- 6. BANCOS -->
+      <section class="pagina" id="bancos">
+        <h1 class="pagina-titulo">Bancos conectados</h1>
+        <div id="lista-bancos"></div>
+      </section>
 
-          <!-- Parcelas — aparece somente quando tipo = saída -->
-          <div class="form-grupo" id="grupo-parcelas" hidden>
-            <label for="transacao-parcelas">Número de parcelas</label>
-            <select id="transacao-parcelas" name="parcelas">
-              <option value="1">À vista (1x)</option>
-              <option value="2">2x</option>
-              <option value="3">3x</option>
-              <option value="4">4x</option>
-              <option value="5">5x</option>
-              <option value="6">6x</option>
-              <option value="8">8x</option>
-              <option value="10">10x</option>
-              <option value="12">12x</option>
-              <option value="18">18x</option>
-              <option value="24">24x</option>
-            </select>
-          </div>
-
-          <div class="form-grupo">
-            <label for="transacao-observacao">Observação <span class="label-opcional">(opcional)</span></label>
-            <textarea id="transacao-observacao" name="observacao"
-                      placeholder="Detalhes adicionais..."
-                      rows="2" maxlength="200"></textarea>
-          </div>
-
-          <div class="modal__acoes">
-            <button type="button" class="btn btn--secundario" id="btn-cancelar-transacao">
-              Cancelar
-            </button>
-            <button type="submit" class="btn btn--primario" id="btn-salvar-transacao">
-              Salvar transação
-            </button>
-          </div>
-
+      <!-- 7. CHAT IA -->
+      <section class="pagina" id="chat">
+        <h1 class="pagina-titulo">Assistente IA</h1>
+        <div class="chat-janela" id="chat-janela"></div>
+        <div class="chat-chips" id="chat-chips"></div>
+        <form class="chat-form" id="chat-form">
+          <input type="text" id="chat-input" placeholder="Pergunte algo ao assistente..." aria-label="Mensagem para o assistente" autocomplete="off" />
+          <button class="btn btn--primario" type="submit">Enviar</button>
         </form>
+      </section>
 
-      </article>
+    </main>
+
+    <footer class="footer">Projeto acadêmico — FinançasFácil © 2026</footer>
+  </div>
+
+  <!-- MODAL DE TRANSAÇÃO -->
+  <div class="modal-overlay oculto" id="modal-transacao" role="dialog" aria-modal="true" aria-labelledby="modal-transacao-titulo">
+    <div class="modal">
+      <div class="modal__header">
+        <h2 class="modal__titulo" id="modal-transacao-titulo">Nova transação</h2>
+        <button class="modal__fechar" id="modal-fechar" aria-label="Fechar" type="button">×</button>
+      </div>
+      <div class="tipo-selector" role="group" aria-label="Tipo">
+        <button class="tipo-btn tipo-btn--entrada ativo" data-tipo="entrada" type="button">Entrada</button>
+        <button class="tipo-btn tipo-btn--saida" data-tipo="saida" type="button">Saída</button>
+        <button class="tipo-btn tipo-btn--pendente" data-tipo="pendente" type="button">Pendente</button>
+      </div>
+      <form id="form-transacao">
+        <input type="hidden" id="transacao-id" />
+        <input type="hidden" id="transacao-tipo" value="entrada" />
+        <div class="form-grupo"><label for="transacao-descricao">Descrição</label><input type="text" id="transacao-descricao" /><span class="form-erro-msg" id="erro-descricao"></span></div>
+        <div class="form-row">
+          <div class="form-grupo"><label for="transacao-valor">Valor</label><input type="number" step="0.01" id="transacao-valor" /><span class="form-erro-msg" id="erro-valor"></span></div>
+          <div class="form-grupo"><label for="transacao-data">Data</label><input type="date" id="transacao-data" /><span class="form-erro-msg" id="erro-data"></span></div>
+        </div>
+        <div class="form-grupo"><label for="transacao-categoria">Categoria</label>
+          <select id="transacao-categoria">
+            <option value="">Selecione...</option>
+            <option value="salario">Salário</option><option value="renda_extra">Renda Extra</option>
+            <option value="moradia">Moradia</option><option value="alimentacao">Alimentação</option>
+            <option value="transporte">Transporte</option><option value="saude">Saúde</option>
+            <option value="educacao">Educação</option><option value="lazer">Lazer</option>
+            <option value="utilidades">Utilidades</option><option value="outros">Outros</option>
+          </select><span class="form-erro-msg" id="erro-categoria"></span>
+        </div>
+        <div class="form-grupo" id="grupo-parcelas" hidden><label for="transacao-parcelas">Parcelas</label><input type="number" id="transacao-parcelas" min="1" value="1" /></div>
+        <div class="form-grupo"><label for="transacao-observacao">Observação</label><input type="text" id="transacao-observacao" /></div>
+        <div class="modal__acoes">
+          <button type="button" class="btn btn--secundario" id="btn-cancelar-transacao">Cancelar</button>
+          <button type="submit" class="btn btn--primario" id="btn-salvar-transacao">Salvar transação</button>
+        </div>
+      </form>
     </div>
+  </div>
 
-    <!-- JavaScript -->
-    <script src="js/ui.js"></script>
-    <script src="js/api.js"></script>
-    <script src="js/app.js"></script>
-
-  </body>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/mock-data.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/charts.js"></script>
+  <script src="js/app.js"></script>
+</body>
 </html>
