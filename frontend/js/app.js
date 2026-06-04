@@ -188,6 +188,15 @@ function inicializarNavegacao() {
       linkAtivo.classList.add('ativo');
       linkAtivo.setAttribute('aria-current', 'page');
     }
+
+    // Render lazy da tela alvo
+    switch (alvo) {
+      case 'categorias':    renderizarPaginaCategorias(); break;
+      case 'investimentos': renderizarPaginaInvestimentos(); break;
+      case 'assinaturas':   renderizarPaginaAssinaturas(); break;
+      case 'bancos':        renderizarPaginaBancos(); break;
+      case 'chat':          inicializarChat(); break;
+    }
   }
 
   linksNav.forEach(link => {
