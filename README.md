@@ -1,25 +1,26 @@
-# Organizador Financeiro Pessoal
+# 💰 Organizador Financeiro Pessoal (FinançasFácil)
 
-Sistema web simples de organizacao financeira pessoal (projeto academico).
+Sistema web de organização financeira pessoal: cadastro de receitas e despesas, categorização e dashboard com resumo dos gastos. Projeto acadêmico, desenvolvido em equipe.
 
-## Stack
+## 🛠️ Stack
 
-- Backend: Node.js, Express, MongoDB, Mongoose, JWT, bcryptjs, dotenv e cors.
-- Frontend: HTML, CSS responsivo e JavaScript puro.
+- **Backend:** Node.js, Express, MongoDB, Mongoose, JWT, bcryptjs, dotenv e cors.
+- **Frontend:** HTML, CSS responsivo e JavaScript puro (com Chart.js para os gráficos).
+- **Deploy:** Vercel.
 
-## Configuracao
+## ⚙️ Configuração
 
-Instale as dependencias pela raiz do repositorio. Este tambem e o ponto usado no deploy da Vercel.
+Instale as dependências pela raiz do repositório. Este também é o ponto usado no deploy da Vercel.
 
 ```bash
 npm install
 ```
 
-Crie as variaveis de ambiente localmente. O projeto carrega `.env` da raiz e tambem `backend/.env`.
+Crie as variáveis de ambiente localmente. O projeto carrega `.env` da raiz e também `backend/.env`.
 
 ```env
 PORT=3000
-MONGO_URI=<sua string de conexao do MongoDB>
+MONGO_URI=<sua string de conexão do MongoDB>
 JWT_SECRET=<segredo forte para assinar tokens JWT>
 ```
 
@@ -28,27 +29,27 @@ Na Vercel, configure pelo menos:
 - `MONGO_URI`
 - `JWT_SECRET`
 
-## Executar localmente
+## ▶️ Executar localmente
 
 ```bash
 npm run dev    # desenvolvimento com nodemon
-npm start      # execucao normal
+npm start      # execução normal
 ```
 
-A aplicacao fica disponivel em:
+A aplicação fica disponível em:
 
 - `http://localhost:3000/`
 - `http://localhost:3000/login`
 
-## Rotas principais
+## 🔌 Rotas principais
 
-Autenticacao:
+Autenticação:
 
 - `POST /api/auth/register`
 - `POST /api/auth/login`
 - `GET /api/auth/me`
 
-Transacoes protegidas por JWT:
+Transações protegidas por JWT:
 
 - `GET /api/transactions`
 - `POST /api/transactions`
@@ -56,7 +57,7 @@ Transacoes protegidas por JWT:
 - `DELETE /api/transactions/:id`
 - `GET /api/transactions/dashboard/summary`
 
-## Seed de categorias padrao
+## 🌱 Seed de categorias padrão
 
 Popula o banco com as categorias iniciais de receitas e despesas.
 
@@ -64,14 +65,14 @@ Popula o banco com as categorias iniciais de receitas e despesas.
 npm run seed
 ```
 
-O seed e idempotente: rodar mais de uma vez nao duplica categorias ja existentes.
+O seed é idempotente: rodar mais de uma vez não duplica categorias já existentes.
 
-## Deploy na Vercel
+## 🚀 Deploy na Vercel
 
-O deploy deve usar a raiz do repositorio como root directory. O `vercel.json` aponta a funcao Node para `backend/src/server.js` e inclui os arquivos do frontend no bundle.
+O deploy deve usar a raiz do repositório como root directory. O `vercel.json` aponta a função Node para `backend/src/server.js` e inclui os arquivos do frontend no bundle.
 
 Requisitos:
 
-- Dependencias instaladas pelo `package.json` da raiz.
+- Dependências instaladas pelo `package.json` da raiz.
 - Node.js `>=20.19.0`.
-- Variaveis `MONGO_URI` e `JWT_SECRET` configuradas no ambiente da Vercel.
+- Variáveis `MONGO_URI` e `JWT_SECRET` configuradas no ambiente da Vercel.
