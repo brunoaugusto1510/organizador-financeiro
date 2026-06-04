@@ -565,3 +565,49 @@
   font-weight: var(--peso-normal);
   color: var(--cor-texto-placeholder);
 }
+
+/* --- Avatar de merchant/banco (círculo colorido com inicial) --- */
+.avatar-merchant { width: 40px; height: 40px; border-radius: var(--raio-pill); display: inline-flex; align-items: center; justify-content: center; font-weight: var(--peso-bold); color: #fff; flex-shrink: 0; }
+
+/* --- Card de transação (estilo Pierre) --- */
+.transacao-card { display: flex; align-items: center; gap: var(--espaco-md); padding: var(--espaco-md); background: var(--cor-fundo-card); border: 1px solid var(--cor-borda); border-radius: var(--raio-lg); margin-bottom: var(--espaco-sm); }
+.transacao-card__info { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.transacao-card__desc { font-weight: var(--peso-medio); color: var(--cor-texto-principal); }
+.transacao-card__meta { font-size: 0.8rem; color: var(--cor-texto-secundario); }
+.transacao-card__valor { margin-left: auto; font-weight: var(--peso-bold); font-variant-numeric: tabular-nums; }
+
+/* --- Barra de categorias multicolor --- */
+.barra-categorias__trilha { display: flex; height: 12px; border-radius: var(--raio-pill); overflow: hidden; gap: 2px; }
+.barra-categorias__seg { height: 100%; }
+.barra-categorias__legenda { display: flex; flex-wrap: wrap; gap: var(--espaco-md); margin-top: var(--espaco-md); }
+.barra-categorias__item { display: flex; align-items: center; gap: var(--espaco-sm); font-size: 0.85rem; color: var(--cor-texto-secundario); }
+.barra-categorias__dot { width: 10px; height: 10px; border-radius: 50%; }
+
+/* --- Card de saldo total (hero) --- */
+.card-saldo-total { padding: var(--espaco-lg); background: var(--cor-fundo-card); border: 1px solid var(--cor-borda); border-radius: var(--raio-xl); margin-bottom: var(--espaco-lg); box-shadow: var(--sombra-card); }
+.card-saldo-total__valor { font-size: 2rem; font-weight: var(--peso-bold); }
+.card-saldo-total__saude { color: var(--cor-sucesso); font-size: 0.9rem; }
+
+/* --- Investimentos --- */
+.investimento-row { display: flex; align-items: center; justify-content: space-between; padding: var(--espaco-md) 0; border-bottom: 1px solid var(--cor-borda); }
+.variacao--alta { color: var(--cor-sucesso); }
+.variacao--baixa { color: var(--cor-erro); }
+
+/* --- Assinaturas --- */
+.assinatura-card { padding: var(--espaco-lg); background: var(--cor-fundo-card); border: 1px solid var(--cor-borda); border-radius: var(--raio-lg); text-align: center; }
+.assinatura-card__valor { font-size: 1.4rem; font-weight: var(--peso-bold); }
+.assinatura-card__prazo { font-size: 0.8rem; color: var(--cor-texto-secundario); margin-top: var(--espaco-sm); }
+
+/* --- Bancos --- */
+.banco-row { display: flex; align-items: center; gap: var(--espaco-md); padding: var(--espaco-md); border: 1px solid var(--cor-borda); border-radius: var(--raio-lg); margin-bottom: var(--espaco-sm); background: var(--cor-fundo-card); }
+.banco-row__saldo { margin-left: auto; font-weight: var(--peso-bold); }
+
+/* --- Chat --- */
+.chat-janela { display: flex; flex-direction: column; gap: var(--espaco-sm); min-height: 320px; padding: var(--espaco-md); background: var(--cor-fundo-card); border: 1px solid var(--cor-borda); border-radius: var(--raio-lg); }
+.chat-bubble { max-width: 75%; padding: var(--espaco-sm) var(--espaco-md); border-radius: var(--raio-lg); }
+.chat-bubble--usuario { align-self: flex-end; background: var(--cor-primaria); color: #042; }
+.chat-bubble--assistente { align-self: flex-start; background: var(--cor-fundo-elevado); color: var(--cor-texto-principal); }
+.chat-chips { display: flex; flex-wrap: wrap; gap: var(--espaco-sm); margin: var(--espaco-md) 0; }
+.chat-chip { padding: 6px 12px; border: 1px solid var(--cor-borda-forte); border-radius: var(--raio-pill); background: transparent; color: var(--cor-texto-secundario); cursor: pointer; }
+.chat-form { display: flex; gap: var(--espaco-sm); }
+.chat-form input { flex: 1; }
