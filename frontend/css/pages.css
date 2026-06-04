@@ -1,8 +1,8 @@
 /* =============================================
-   ESTILOS ESPECÍFICOS POR PÁGINA
+   ESTILOS ESPECÍFICOS POR PÁGINA — dark
    ============================================= */
 
-/* --- Controle de visibilidade de páginas (SPA) --- */
+/* --- SPA toggle --- */
 .pagina {
   display: none;
 }
@@ -19,16 +19,33 @@
   justify-content: center;
   background-color: var(--cor-fundo);
   padding: var(--espaco-md);
+  position: relative;
+  z-index: 1;
 }
 
 .auth-card {
   background-color: var(--cor-fundo-card);
-  border-radius: var(--raio-lg);
+  border-radius: var(--raio-xl);
   border: 1px solid var(--cor-borda);
   padding: var(--espaco-xl);
   width: 100%;
-  max-width: 400px;
+  max-width: 420px;
   box-shadow: var(--sombra-elevado);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Toque de cor sutil no topo do auth card */
+.auth-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--cor-primaria), transparent);
+  opacity: 0.6;
 }
 
 .auth-card__logo {
@@ -36,43 +53,57 @@
   margin-bottom: var(--espaco-xl);
 }
 
-.auth-card__logo h1 {
-  font-size: 1.4rem;
+.auth-card__logo svg {
+  margin: 0 auto var(--espaco-md);
   color: var(--cor-primaria);
+  filter: drop-shadow(0 0 12px rgba(16, 185, 129, 0.4));
+}
+
+.auth-card__logo h1 {
+  font-size: 1.5rem;
+  color: var(--cor-texto-principal);
+  letter-spacing: -0.02em;
 }
 
 .auth-card__logo p {
   font-size: 0.85rem;
   color: var(--cor-texto-secundario);
-  margin-top: var(--espaco-xs);
+  margin-top: 6px;
 }
 
 .auth-tabs {
   display: flex;
-  border-bottom: 2px solid var(--cor-borda);
+  background: var(--cor-fundo-input);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio-md);
+  padding: 4px;
   margin-bottom: var(--espaco-lg);
+  gap: 2px;
 }
 
 .auth-tab {
   flex: 1;
-  padding: var(--espaco-sm);
+  padding: 8px;
   text-align: center;
+  font-family: inherit;
   font-weight: var(--peso-medio);
-  font-size: 0.9rem;
+  font-size: 0.88rem;
   color: var(--cor-texto-secundario);
   cursor: pointer;
-  border-bottom: 2px solid transparent;
-  margin-bottom: -2px;
-  transition: color var(--transicao), border-color var(--transicao);
-  background: none;
-  border-top: none;
-  border-left: none;
-  border-right: none;
+  border: none;
+  border-radius: var(--raio-sm);
+  background: transparent;
+  transition: color var(--transicao), background-color var(--transicao);
+}
+
+.auth-tab:hover {
+  color: var(--cor-texto-principal);
 }
 
 .auth-tab.ativo {
-  color: var(--cor-primaria);
-  border-bottom-color: var(--cor-primaria);
+  color: var(--cor-texto-principal);
+  background-color: var(--cor-fundo-elevado);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.04) inset;
 }
 
 .auth-form {
@@ -81,25 +112,36 @@
 
 .auth-form.ativo {
   display: block;
+  animation: fadeUp 300ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 .auth-rodape {
   text-align: center;
-  font-size: 0.8rem;
+  font-size: 0.76rem;
   color: var(--cor-texto-placeholder);
   margin-top: var(--espaco-lg);
 }
 
 /* --- Página: Dashboard --- */
 .pagina-titulo {
-  font-size: 1.3rem;
+  font-size: 1.5rem;
   font-weight: var(--peso-bold);
   color: var(--cor-texto-principal);
   margin-bottom: var(--espaco-lg);
+  letter-spacing: -0.02em;
 }
 
 .pagina-titulo span {
-  color: var(--cor-primaria);
+  background: linear-gradient(135deg, var(--cor-primaria), #6ee7b7);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
 }
 
 .secao {
@@ -111,27 +153,30 @@
   align-items: center;
   justify-content: space-between;
   margin-bottom: var(--espaco-md);
+  gap: var(--espaco-md);
 }
 
 .secao__titulo {
   font-size: 1rem;
   font-weight: var(--peso-bold);
   color: var(--cor-texto-principal);
+  letter-spacing: -0.01em;
 }
 
 /* --- Filtros de transações --- */
 .filtros {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--espaco-sm);
+  gap: 6px;
   margin-bottom: var(--espaco-md);
 }
 
 .filtro-btn {
-  padding: var(--espaco-xs) var(--espaco-md);
+  padding: 6px 14px;
   border-radius: var(--raio-pill);
-  border: 1.5px solid var(--cor-borda);
-  font-size: 0.85rem;
+  border: 1px solid var(--cor-borda);
+  font-family: inherit;
+  font-size: 0.82rem;
   font-weight: var(--peso-medio);
   color: var(--cor-texto-secundario);
   background-color: var(--cor-fundo-card);
@@ -140,14 +185,14 @@
 }
 
 .filtro-btn:hover {
-  border-color: var(--cor-primaria);
-  color: var(--cor-primaria);
+  border-color: var(--cor-borda-forte);
+  color: var(--cor-texto-principal);
 }
 
 .filtro-btn.ativo {
-  background-color: var(--cor-primaria);
-  border-color: var(--cor-primaria);
-  color: #ffffff;
+  background-color: var(--cor-entrada);
+  border-color: var(--cor-entrada-borda);
+  color: var(--cor-entrada-texto);
 }
 
 .filtros-avancados {
@@ -155,6 +200,11 @@
   flex-wrap: wrap;
   gap: var(--espaco-sm);
   align-items: flex-end;
+  padding: var(--espaco-md);
+  background-color: var(--cor-fundo-card);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio-lg);
+  margin-bottom: var(--espaco-md);
 }
 
 .filtros-avancados .form-grupo {
@@ -165,19 +215,20 @@
 
 /* --- Contagem de resultados --- */
 .resultado-contagem {
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   color: var(--cor-texto-secundario);
   margin-bottom: var(--espaco-sm);
 }
 
 .resultado-contagem strong {
   color: var(--cor-texto-principal);
+  font-weight: var(--peso-bold);
 }
 
 /* --- Botões de ação na tabela (editar / excluir) --- */
 .acoes-tabela {
   display: flex;
-  gap: var(--espaco-xs);
+  gap: 6px;
 }
 
 .btn-acao {
@@ -188,7 +239,7 @@
   height: 30px;
   border-radius: var(--raio-sm);
   border: 1px solid var(--cor-borda);
-  background: var(--cor-fundo-card);
+  background: var(--cor-fundo-input);
   color: var(--cor-texto-secundario);
   font-size: 0.85rem;
   cursor: pointer;
@@ -196,7 +247,8 @@
 }
 
 .btn-acao:hover {
-  background: var(--cor-fundo);
+  background: var(--cor-fundo-elevado);
+  color: var(--cor-texto-principal);
 }
 
 .btn-acao--editar:hover {
@@ -205,7 +257,7 @@
 }
 
 .btn-acao--excluir:hover {
-  border-color: var(--cor-erro);
+  border-color: rgba(239, 68, 68, 0.5);
   color: var(--cor-erro);
   background: var(--cor-erro-bg);
 }
