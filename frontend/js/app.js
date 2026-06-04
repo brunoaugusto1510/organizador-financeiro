@@ -752,7 +752,7 @@ function labelCategoria(cat) {
 }
 
 // ============================================================
-// HELPERS DE RENDER (estilo Pierre)
+// HELPERS DE RENDER (cards do dashboard)
 // ============================================================
 /** Cor determinística a partir de um nome (para avatar). */
 function corDeNome(nome) {
@@ -768,7 +768,7 @@ function avatarMerchant(nome) {
   return `<span class="avatar-merchant" style="background:${corDeNome(nome || '?')}">${inicial}</span>`;
 }
 
-/** Card de transação estilo Pierre. */
+/** Card de transação. */
 function transacaoCard(t) {
   const sinal = t.tipo === 'entrada' ? '+' : t.tipo === 'saida' ? '−' : '';
   return `
@@ -895,6 +895,6 @@ function inicializarChat() {
       input.value = '';
     });
     form.dataset.pronto = '1';
-    adicionarBolhaChat('Oi! Sou o Pierre. Como posso te ajudar com suas finanças?', 'assistente');
+    adicionarBolhaChat('Oi! Sou seu assistente financeiro. Como posso te ajudar com suas finanças?', 'assistente');
   }
 }

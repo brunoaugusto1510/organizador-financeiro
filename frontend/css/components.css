@@ -569,7 +569,7 @@
 /* --- Avatar de merchant/banco (círculo colorido com inicial) --- */
 .avatar-merchant { width: 40px; height: 40px; border-radius: var(--raio-pill); display: inline-flex; align-items: center; justify-content: center; font-weight: var(--peso-bold); color: #fff; flex-shrink: 0; }
 
-/* --- Card de transação (estilo Pierre) --- */
+/* --- Card de transação --- */
 .transacao-card { display: flex; align-items: center; gap: var(--espaco-md); padding: var(--espaco-md); background: var(--cor-fundo-card); border: 1px solid var(--cor-borda); border-radius: var(--raio-lg); margin-bottom: var(--espaco-sm); }
 .transacao-card__info { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .transacao-card__desc { font-weight: var(--peso-medio); color: var(--cor-texto-principal); }

@@ -33,6 +33,6 @@ const MOCK = {
     const texto = String(mensagem).toLowerCase();
     if (texto.includes('plano')) return 'Posso montar um plano: separe 50% para essenciais, 30% para desejos e 20% para poupança. Quer que eu detalhe com base nos seus gastos?';
     if (texto.includes('grana') || texto.includes('apertado')) return 'Entendi. Vejo que suas saídas estão altas este mês. Que tal revisar as assinaturas? Você tem 3 ativas somando R$ 76,70/mês.';
-    return 'Sou o Pierre, seu assistente financeiro. (Resposta de demonstração — a IA real será conectada pelo backend.)';
+    return 'Sou seu assistente financeiro. (Resposta de demonstração — a IA real será conectada pelo backend.)';
   },
 };
