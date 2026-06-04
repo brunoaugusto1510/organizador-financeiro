@@ -126,15 +126,18 @@ async function carregarResumo() {
 }
 
 function renderizarResumo({ saldo, entradas, saidas, pendentes }) {
-  const set = (id, valor) => {
-    const el = document.getElementById(id);
-    if (el) el.textContent = formatarBRL(valor ?? 0);
-  };
+  const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = formatarBRL(v ?? 0); };
+  set('saldo-valor', saldo); set('entradas-valor', entradas);
+  set('saidas-valor', saidas); set('pendentes-valor', pendentes);
 
-  set('saldo-valor',    saldo);
-  set('entradas-valor', entradas);
-  set('saidas-valor',   saidas);
-  set('pendentes-valor', pendentes);
+  const hero = document.getElementById('card-saldo-total');
+  if (hero) hero.innerHTML = `
+    <p class="card__titulo">Saldo total</p>
+    <p class="card-saldo-total__valor">${formatarBRL(saldo ?? 0)}</p>
+    <p class="card-saldo-total__saude">Sua saúde financeira está ${(saldo ?? 0) >= 0 ? 'em dia' : 'no vermelho'}</p>`;
+
+  criarDonut('grafico-donut-resumo', ['Entradas', 'Saídas'], [entradas ?? 0, saidas ?? 0]);
+  renderizarBarraCategorias('barra-categorias-dashboard', todasTransacoes.length ? todasTransacoes : DEMO.transacoes);
 }
 
 // --- Transações recentes ---
@@ -155,41 +158,8 @@ async function carregarTransacoesRecentes() {
 function renderizarTransacoesRecentes(lista) {
   const container = document.getElementById('lista-transacoes-recentes');
   if (!container) return;
-
-  if (!lista.length) {
-    container.innerHTML = criarEstadoVazio('Nenhuma transação registrada ainda.');
-    return;
-  }
-
-  // Monta a tabela dinamicamente
-  const linhas = lista.map(t => `
-    <tr>
-      <td>${formatarData(t.data)}</td>
-      <td>${t.descricao}</td>
-      <td><span class="badge-categoria">${t.categoria ?? '—'}</span></td>
-      <td>${criarBadge(t.tipo)}</td>
-      <td class="valor-cell valor--${t.tipo}">${formatarBRL(t.valor)}</td>
-    </tr>
-  `).join('');
-
-  container.innerHTML = `
-    <div class="tabela-wrapper">
-      <table class="tabela" aria-label="Transações recentes">
-        <thead>
-          <tr>
-            <th scope="col">Data</th>
-            <th scope="col">Descrição</th>
-            <th scope="col">Categoria</th>
-            <th scope="col">Tipo</th>
-            <th scope="col">Valor</th>
-          </tr>
-        </thead>
-        <tbody id="tbody-transacoes">
-          ${linhas}
-        </tbody>
-      </table>
-    </div>
-  `;
+  if (!lista.length) { container.innerHTML = criarEstadoVazio('Nenhuma transação registrada ainda.'); return; }
+  container.innerHTML = lista.map(transacaoCard).join('');
 }
 
 // ============================================================
@@ -787,4 +757,58 @@ const LABELS_CATEGORIA = {
 
 function labelCategoria(cat) {
   return LABELS_CATEGORIA[cat] ?? cat ?? '—';
+}
+
+// ============================================================
+// HELPERS DE RENDER (estilo Pierre)
+// ============================================================
+/** Cor determinística a partir de um nome (para avatar). */
+function corDeNome(nome) {
+  const cores = ['#10b981','#f472b6','#fbbf24','#60a5fa','#a78bfa','#fb923c','#22d3ee'];
+  let h = 0;
+  for (let i = 0; i < nome.length; i++) h = nome.charCodeAt(i) + ((h << 5) - h);
+  return cores[Math.abs(h) % cores.length];
+}
+
+/** HTML de um avatar circular com a inicial. */
+function avatarMerchant(nome) {
+  const inicial = (nome || '?').trim().charAt(0).toUpperCase();
+  return `<span class="avatar-merchant" style="background:${corDeNome(nome || '?')}">${inicial}</span>`;
+}
+
+/** Card de transação estilo Pierre. */
+function transacaoCard(t) {
+  const sinal = t.tipo === 'entrada' ? '+' : t.tipo === 'saida' ? '−' : '';
+  return `
+    <div class="transacao-card">
+      ${avatarMerchant(t.descricao)}
+      <div class="transacao-card__info">
+        <span class="transacao-card__desc">${t.descricao}</span>
+        <span class="transacao-card__meta">${labelCategoria(t.categoria)} • ${formatarData(t.data)}</span>
+      </div>
+      <span class="transacao-card__valor valor--${t.tipo}">${sinal} ${formatarBRL(t.valor)}</span>
+    </div>`;
+}
+
+/** Agrega transações de saída por categoria → [{categoria, total}] desc. */
+function agregarPorCategoria(transacoes) {
+  const mapa = {};
+  transacoes.filter(t => t.tipo === 'saida').forEach(t => {
+    const c = t.categoria || 'outros';
+    mapa[c] = (mapa[c] || 0) + t.valor;
+  });
+  return Object.entries(mapa).map(([categoria, total]) => ({ categoria, total }))
+    .sort((a, b) => b.total - a.total);
+}
+
+/** Renderiza a barra multicolor de categorias num container. */
+function renderizarBarraCategorias(containerId, transacoes) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  const dados = agregarPorCategoria(transacoes);
+  const total = dados.reduce((s, d) => s + d.total, 0) || 1;
+  const cores = ['#f472b6','#a78bfa','#fbbf24','#60a5fa','#34d399','#fb923c'];
+  const segs = dados.map((d, i) => `<div class="barra-categorias__seg" style="width:${(d.total/total*100).toFixed(1)}%;background:${cores[i%cores.length]}"></div>`).join('');
+  const legenda = dados.map((d, i) => `<span class="barra-categorias__item"><span class="barra-categorias__dot" style="background:${cores[i%cores.length]}"></span>${labelCategoria(d.categoria)} — ${formatarBRL(d.total)}</span>`).join('');
+  el.innerHTML = `<div class="barra-categorias__trilha">${segs}</div><div class="barra-categorias__legenda">${legenda}</div>`;
 }
