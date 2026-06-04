@@ -847,3 +847,45 @@ async function renderizarPaginaBancos() {
   el.innerHTML = dados.map(b => `
     <div class="banco-row">${avatarMerchant(b.nome)}<span>${b.nome}</span><span class="banco-row__saldo">${formatarBRL(b.saldo)}</span></div>`).join('');
 }
+
+// ============================================================
+// TELA CHAT IA (mock)
+// ============================================================
+const CHAT_CHIPS = ['Me ajuda com um plano', 'Tô apertado de grana', 'Quanto gastei esse mês?'];
+
+function adicionarBolhaChat(texto, autor) {
+  const janela = document.getElementById('chat-janela');
+  if (!janela) return;
+  const div = document.createElement('div');
+  div.className = `chat-bubble chat-bubble--${autor}`;
+  div.textContent = texto;
+  janela.appendChild(div);
+  janela.scrollTop = janela.scrollHeight;
+}
+
+async function enviarMensagemChat(texto) {
+  if (!texto.trim()) return;
+  adicionarBolhaChat(texto, 'usuario');
+  const { resposta } = await ChatAPI.enviar(texto);
+  adicionarBolhaChat(resposta, 'assistente');
+}
+
+function inicializarChat() {
+  const chips = document.getElementById('chat-chips');
+  if (chips && !chips.dataset.pronto) {
+    chips.innerHTML = CHAT_CHIPS.map(c => `<button class="chat-chip" type="button">${c}</button>`).join('');
+    chips.querySelectorAll('.chat-chip').forEach(b => b.addEventListener('click', () => enviarMensagemChat(b.textContent)));
+    chips.dataset.pronto = '1';
+  }
+  const form = document.getElementById('chat-form');
+  if (form && !form.dataset.pronto) {
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const input = document.getElementById('chat-input');
+      enviarMensagemChat(input.value);
+      input.value = '';
+    });
+    form.dataset.pronto = '1';
+    adicionarBolhaChat('Oi! Sou o Pierre. Como posso te ajudar com suas finanças?', 'assistente');
+  }
+}
