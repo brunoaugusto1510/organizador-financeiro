@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Dashboard do FinançasFácil — visão geral das suas finanças." />
   <title>Dashboard — FinançasFácil</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -20,7 +21,7 @@
   <div class="app-container">
     <header class="header" role="banner">
       <div style="display:flex;align-items:center;gap:12px;">
-        <button class="header__menu-btn" id="menu-btn" aria-label="Abrir menu" aria-expanded="false" type="button"><span></span><span></span><span></span></button>
+        <button class="header__menu-btn" id="menu-btn" aria-label="Abrir menu" aria-controls="sidebar" aria-expanded="false" type="button"><span></span><span></span><span></span></button>
         <a href="#dashboard" class="header__logo">FinançasFácil <span>beta</span></a>
       </div>
       <div class="header__actions">
@@ -29,7 +30,7 @@
       </div>
     </header>
 
-    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+    <div class="sidebar-overlay" id="sidebar-overlay" aria-hidden="true"></div>
 
     <aside class="sidebar" id="sidebar" aria-label="Navegação principal">
       <nav class="nav">
@@ -63,7 +64,7 @@
           </div>
         </section>
         <div class="grid-graficos">
-          <section class="secao secao--grafico"><h2 class="secao__titulo">Entradas × Saídas</h2><canvas id="grafico-donut-resumo" height="220"></canvas></section>
+          <section class="secao secao--grafico"><h2 class="secao__titulo">Entradas × Saídas</h2><canvas id="grafico-donut-resumo" height="220" role="img" aria-label="Gráfico de entradas e saídas"></canvas></section>
           <section class="secao secao--grafico"><h2 class="secao__titulo">Gastos por categoria</h2><div id="barra-categorias-dashboard"></div></section>
         </div>
         <section class="secao">
@@ -80,12 +81,12 @@
           <button class="filtro-btn" data-filtro-tipo="entrada" type="button">Entradas</button>
           <button class="filtro-btn" data-filtro-tipo="saida" type="button">Saídas</button>
           <button class="filtro-btn" data-filtro-tipo="pendente" type="button">Pendentes</button>
-          <input type="search" id="filtro-busca" placeholder="Buscar..." />
-          <input type="date" id="filtro-data-inicio" />
-          <input type="date" id="filtro-data-fim" />
+          <input type="search" id="filtro-busca" placeholder="Buscar..." aria-label="Buscar transações" />
+          <input type="date" id="filtro-data-inicio" aria-label="Data início" />
+          <input type="date" id="filtro-data-fim" aria-label="Data fim" />
           <button class="btn btn--secundario" id="btn-limpar-filtros" type="button">Limpar</button>
         </div>
-        <p class="resultado-contagem" id="resultado-contagem"></p>
+        <p class="resultado-contagem" id="resultado-contagem" aria-live="polite"></p>
         <div id="container-transacoes-lista"></div>
       </section>
 
@@ -94,7 +95,7 @@
         <h1 class="pagina-titulo">Gastos por categoria</h1>
         <div id="barra-categorias-pagina"></div>
         <div class="grid-graficos">
-          <section class="secao secao--grafico"><canvas id="grafico-donut-categorias" height="240"></canvas></section>
+          <section class="secao secao--grafico"><canvas id="grafico-donut-categorias" height="240" role="img" aria-label="Gráfico de gastos por categoria"></canvas></section>
           <section class="secao"><div id="lista-categorias"></div></section>
         </div>
       </section>
@@ -123,13 +124,14 @@
         <div class="chat-janela" id="chat-janela"></div>
         <div class="chat-chips" id="chat-chips"></div>
         <form class="chat-form" id="chat-form">
-          <input type="text" id="chat-input" placeholder="Pergunte algo ao Pierre..." autocomplete="off" />
+          <input type="text" id="chat-input" placeholder="Pergunte algo ao Pierre..." aria-label="Mensagem para o Pierre" autocomplete="off" />
           <button class="btn btn--primario" type="submit">Enviar</button>
         </form>
       </section>
 
-      <footer class="footer">Projeto acadêmico — FinançasFácil © 2026</footer>
     </main>
+
+    <footer class="footer">Projeto acadêmico — FinançasFácil © 2026</footer>
   </div>
 
   <!-- MODAL DE TRANSAÇÃO -->
@@ -139,7 +141,7 @@
         <h2 class="modal__titulo" id="modal-transacao-titulo">Nova transação</h2>
         <button class="modal__fechar" id="modal-fechar" aria-label="Fechar" type="button">×</button>
       </div>
-      <div class="tipo-selector" role="radiogroup" aria-label="Tipo">
+      <div class="tipo-selector" role="group" aria-label="Tipo">
         <button class="tipo-btn tipo-btn--entrada ativo" data-tipo="entrada" type="button">Entrada</button>
         <button class="tipo-btn tipo-btn--saida" data-tipo="saida" type="button">Saída</button>
         <button class="tipo-btn tipo-btn--pendente" data-tipo="pendente" type="button">Pendente</button>
