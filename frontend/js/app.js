@@ -795,3 +795,55 @@ function renderizarBarraCategorias(containerId, transacoes) {
   const legenda = dados.map((d, i) => `<span class="barra-categorias__item"><span class="barra-categorias__dot" style="background:${cores[i%cores.length]}"></span>${labelCategoria(d.categoria)} — ${formatarBRL(d.total)}</span>`).join('');
   el.innerHTML = `<div class="barra-categorias__trilha">${segs}</div><div class="barra-categorias__legenda">${legenda}</div>`;
 }
+
+// ============================================================
+// TELAS MOCK — Investimentos, Assinaturas, Bancos
+// ============================================================
+async function renderizarPaginaInvestimentos() {
+  const el = document.getElementById('card-investimentos');
+  if (!el) return;
+  const dados = await InvestimentosAPI.listar();
+  const total = dados.reduce((s, d) => s + d.valor, 0);
+  el.innerHTML = `
+    <div class="card-saldo-total">
+      <p class="card__titulo">Total investido • ${dados.length} ativos</p>
+      <p class="card-saldo-total__valor">${formatarBRL(total)}</p>
+    </div>
+    <div class="grid-graficos">
+      <section class="secao secao--grafico"><canvas id="grafico-donut-invest" height="240" role="img" aria-label="Distribuição dos investimentos"></canvas></section>
+      <section class="secao">${dados.map(d => `
+        <div class="investimento-row">
+          <span>${d.classe}</span>
+          <span>${formatarBRL(d.valor)}
+            <span class="${d.variacaoPct >= 0 ? 'variacao--alta' : 'variacao--baixa'}">
+              ${d.variacaoPct >= 0 ? '↑' : '↓'} ${Math.abs(d.variacaoPct)}%
+            </span>
+          </span>
+        </div>`).join('')}</section>
+    </div>`;
+  criarDonut('grafico-donut-invest', dados.map(d => d.classe), dados.map(d => d.valor));
+}
+
+async function renderizarPaginaAssinaturas() {
+  const el = document.getElementById('lista-assinaturas');
+  if (!el) return;
+  const dados = await AssinaturasAPI.listar();
+  const hoje = new Date();
+  el.innerHTML = dados.map(a => {
+    const dias = Math.max(0, Math.ceil((new Date(a.proximaCobranca) - hoje) / 86400000));
+    return `<div class="assinatura-card">
+      ${avatarMerchant(a.nome)}
+      <p class="transacao-card__desc">${a.nome}</p>
+      <p class="assinatura-card__valor">${formatarBRL(a.valor)}</p>
+      <p class="assinatura-card__prazo">em ${dias} dias</p>
+    </div>`;
+  }).join('');
+}
+
+async function renderizarPaginaBancos() {
+  const el = document.getElementById('lista-bancos');
+  if (!el) return;
+  const dados = await BancosAPI.listar();
+  el.innerHTML = dados.map(b => `
+    <div class="banco-row">${avatarMerchant(b.nome)}<span>${b.nome}</span><span class="banco-row__saldo">${formatarBRL(b.saldo)}</span></div>`).join('');
+}
