@@ -555,50 +555,33 @@ function renderizarTabelaTransacoes(lista) {
       : '';
   }
 
-  if (!lista.length) {
-    container.innerHTML = criarEstadoVazio('Nenhuma transação encontrada para os filtros aplicados.');
-    return;
-  }
+  if (!lista.length) { container.innerHTML = criarEstadoVazio('Nenhuma transação encontrada.'); return; }
+  container.innerHTML = lista.map(t => `
+    <div class="transacao-card" data-id="${t.id}">
+      ${avatarMerchant(t.descricao)}
+      <div class="transacao-card__info">
+        <span class="transacao-card__desc">${t.descricao}</span>
+        <span class="transacao-card__meta">${labelCategoria(t.categoria)} • ${formatarData(t.data)}</span>
+      </div>
+      <span class="transacao-card__valor valor--${t.tipo}">${formatarBRL(t.valor)}</span>
+      <div class="acoes-tabela">
+        <button class="btn-acao btn-acao--editar" onclick="editarTransacao('${t.id}')" aria-label="Editar">✏️</button>
+        <button class="btn-acao btn-acao--excluir" onclick="excluirTransacao('${t.id}')" aria-label="Excluir">🗑️</button>
+      </div>
+    </div>`).join('');
+}
 
-  const linhas = lista.map(t => `
-    <tr data-id="${t.id}">
-      <td>${formatarData(t.data)}</td>
-      <td><span class="descricao-cell">${t.descricao}</span></td>
-      <td><span class="badge-categoria">${labelCategoria(t.categoria)}</span></td>
-      <td>${criarBadge(t.tipo)}</td>
-      <td class="valor-cell valor--${t.tipo}">${formatarBRL(t.valor)}</td>
-      <td>
-        <div class="acoes-tabela">
-          <button class="btn-acao btn-acao--editar"
-                  onclick="editarTransacao('${t.id}')"
-                  aria-label="Editar transação ${t.descricao}"
-                  title="Editar">✏️</button>
-          <button class="btn-acao btn-acao--excluir"
-                  onclick="excluirTransacao('${t.id}')"
-                  aria-label="Excluir transação ${t.descricao}"
-                  title="Excluir">🗑️</button>
-        </div>
-      </td>
-    </tr>
-  `).join('');
-
-  container.innerHTML = `
-    <div class="tabela-wrapper">
-      <table class="tabela" aria-label="Lista de transações">
-        <thead>
-          <tr>
-            <th scope="col">Data</th>
-            <th scope="col">Descrição</th>
-            <th scope="col">Categoria</th>
-            <th scope="col">Tipo</th>
-            <th scope="col">Valor</th>
-            <th scope="col"><span class="sr-only">Ações</span></th>
-          </tr>
-        </thead>
-        <tbody>${linhas}</tbody>
-      </table>
-    </div>
-  `;
+// ============================================================
+// TELA CATEGORIAS
+// ============================================================
+function renderizarPaginaCategorias() {
+  const fonte = todasTransacoes.length ? todasTransacoes : DEMO.transacoes;
+  renderizarBarraCategorias('barra-categorias-pagina', fonte);
+  const dados = agregarPorCategoria(fonte);
+  criarDonut('grafico-donut-categorias', dados.map(d => labelCategoria(d.categoria)), dados.map(d => d.total));
+  const lista = document.getElementById('lista-categorias');
+  if (lista) lista.innerHTML = dados.map(d => `
+    <div class="investimento-row"><span>${labelCategoria(d.categoria)}</span><strong>${formatarBRL(d.total)}</strong></div>`).join('') || criarEstadoVazio('Sem gastos no período.');
 }
 
 /** Abre o modal preenchido para edição */
