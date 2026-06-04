@@ -1,8 +1,8 @@
-# Redesign Frontend estilo Pierre — Plano de Implementação
+# Redesign Frontend do dashboard — Plano de Implementação
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Reconstruir o frontend do FinançasFácil replicando as 7 telas do app Pierre (visual de app dark), com dados reais nas telas de transação e dados mock + contrato documentado nas demais, prontas para o backend plugar depois.
+**Goal:** Reconstruir o frontend do FinançasFácil replicando as 7 telas do app de referência (visual de app dark), com dados reais nas telas de transação e dados mock + contrato documentado nas demais, prontas para o backend plugar depois.
 
 **Architecture:** SPA estática (sem build). `index.html` hospeda 7 seções `.pagina` trocadas por um router client-side via sidebar/hash. Camada de dados em módulos de API: reais (`TransacoesAPI`, `AuthAPI`) e stubs mock (`BancosAPI`, `InvestimentosAPI`, `AssinaturasAPI`, `ChatAPI`) que retornam `Promise` com dado falso e o shape esperado documentado. Gráficos via Chart.js (CDN); barra de categorias em CSS puro.
 
@@ -88,7 +88,7 @@ Substituir TODO o arquivo por este scaffold. Cada tela é uma `<section class="p
           <li class="nav__item"><a href="#investimentos">Investimentos</a></li>
           <li class="nav__item"><a href="#assinaturas">Assinaturas</a></li>
           <li class="nav__item"><a href="#bancos">Bancos</a></li>
-          <li class="nav__item"><a href="#chat">Pierre IA</a></li>
+          <li class="nav__item"><a href="#chat">Assistente IA</a></li>
         </ul>
         <div class="nav__separador"></div>
         <ul class="nav__lista">
@@ -167,11 +167,11 @@ Substituir TODO o arquivo por este scaffold. Cada tela é uma `<section class="p
 
       <!-- 7. CHAT IA -->
       <section class="pagina" id="chat">
-        <h1 class="pagina-titulo">Pierre IA</h1>
+        <h1 class="pagina-titulo">Assistente IA</h1>
         <div class="chat-janela" id="chat-janela"></div>
         <div class="chat-chips" id="chat-chips"></div>
         <form class="chat-form" id="chat-form">
-          <input type="text" id="chat-input" placeholder="Pergunte algo ao Pierre..." autocomplete="off" />
+          <input type="text" id="chat-input" placeholder="Pergunte algo ao assistente..." autocomplete="off" />
           <button class="btn btn--primario" type="submit">Enviar</button>
         </form>
       </section>
@@ -239,7 +239,7 @@ Expected: As 7 seções existem; sidebar mostra 7 itens; clicar nos itens troca 
 
 ```bash
 git add frontend/index.html
-git commit -m "feat(frontend): scaffold das 7 telas estilo Pierre no index.html
+git commit -m "feat(frontend): scaffold das 7 telas do dashboard no index.html
 
 Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 ```
@@ -291,7 +291,7 @@ const MOCK = {
     const texto = String(mensagem).toLowerCase();
     if (texto.includes('plano')) return 'Posso montar um plano: separe 50% para essenciais, 30% para desejos e 20% para poupança. Quer que eu detalhe com base nos seus gastos?';
     if (texto.includes('grana') || texto.includes('apertado')) return 'Entendi. Vejo que suas saídas estão altas este mês. Que tal revisar as assinaturas? Você tem 3 ativas somando R$ 76,70/mês.';
-    return 'Sou o Pierre, seu assistente financeiro. (Resposta de demonstração — a IA real será conectada pelo backend.)';
+    return 'Sou seu assistente financeiro. (Resposta de demonstração — a IA real será conectada pelo backend.)';
   },
 };
 ```
@@ -427,7 +427,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 /* --- Avatar de merchant/banco (círculo colorido com inicial) --- */
 .avatar-merchant { width: 40px; height: 40px; border-radius: var(--raio-pill); display: inline-flex; align-items: center; justify-content: center; font-weight: var(--peso-bold); color: #fff; flex-shrink: 0; }
 
-/* --- Card de transação (estilo Pierre) --- */
+/* --- Card de transação (do dashboard) --- */
 .transacao-card { display: flex; align-items: center; gap: var(--espaco-md); padding: var(--espaco-md); background: var(--cor-fundo-card); border: 1px solid var(--cor-borda); border-radius: var(--raio-lg); margin-bottom: var(--espaco-sm); }
 .transacao-card__info { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .transacao-card__desc { font-weight: var(--peso-medio); color: var(--cor-texto-principal); }
@@ -489,7 +489,7 @@ Expected: sem erro de CSS; layout do dashboard não quebra. (Componentes ainda s
 
 ```bash
 git add frontend/css/components.css frontend/css/pages.css
-git commit -m "feat(frontend): estilos dos componentes estilo Pierre
+git commit -m "feat(frontend): estilos dos componentes do dashboard
 
 Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 ```
@@ -505,7 +505,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 
 ```js
 // ============================================================
-// HELPERS DE RENDER (estilo Pierre)
+// HELPERS DE RENDER (do dashboard)
 // ============================================================
 /** Cor determinística a partir de um nome (para avatar). */
 function corDeNome(nome) {
@@ -521,7 +521,7 @@ function avatarMerchant(nome) {
   return `<span class="avatar-merchant" style="background:${corDeNome(nome || '?')}">${inicial}</span>`;
 }
 
-/** Card de transação estilo Pierre. */
+/** Card de transação do dashboard. */
 function transacaoCard(t) {
   const sinal = t.tipo === 'entrada' ? '+' : t.tipo === 'saida' ? '−' : '';
   return `
@@ -602,7 +602,7 @@ Expected: hero "Saldo total" no topo; 4 cards; donut Entradas×Saídas; barra mu
 
 ```bash
 git add frontend/js/app.js
-git commit -m "feat(frontend): visao geral estilo Pierre (saldo, donut, barra, cards)
+git commit -m "feat(frontend): visao geral do dashboard (saldo, donut, barra, cards)
 
 Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 ```
@@ -790,7 +790,7 @@ function inicializarChat() {
       input.value = '';
     });
     form.dataset.pronto = '1';
-    adicionarBolhaChat('Oi! Sou o Pierre. Como posso te ajudar com suas finanças?', 'assistente');
+    adicionarBolhaChat('Oi! Sou seu assistente. Como posso te ajudar com suas finanças?', 'assistente');
   }
 }
 ```
@@ -804,7 +804,7 @@ Expected: bolha do usuário à direita (verde), resposta do assistente à esquer
 
 ```bash
 git add frontend/js/app.js
-git commit -m "feat(frontend): tela de chat IA mock (Pierre)
+git commit -m "feat(frontend): tela de chat IA mock (assistente)
 
 Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 ```
@@ -856,7 +856,7 @@ Expected: tudo renderiza, gráficos ok, sem erro no console, responsivo no mobil
 
 - [ ] **Step 2: Invocar finishing-a-development-branch**
 
-Usar a skill `superpowers:finishing-a-development-branch` para decidir merge/PR da branch `feat/pierre-style-frontend`.
+Usar a skill `superpowers:finishing-a-development-branch` para decidir merge/PR da branch `feat/dashboard-redesign`.
 
 ---
 

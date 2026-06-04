@@ -1,4 +1,4 @@
-# Redesign do Frontend no estilo Pierre — Design
+# Redesign do Frontend moderno — Design
 
 **Data:** 2026-06-04
 **Projeto:** organizador-financeiro (FinançasFácil)
@@ -6,7 +6,7 @@
 
 ## Objetivo
 
-Redesenhar o frontend para replicar as telas do app **Pierre** (pierre.finance),
+Redesenhar o frontend para replicar as telas do um app de referência,
 construindo **todas as telas no frontend agora** com dados reais onde o backend
 já suporta e **dados mock** onde ainda não. O time de backend pluga a lógica
 real depois, trocando o corpo dos stubs de API por chamadas `fetch` reais.
@@ -16,7 +16,7 @@ real depois, trocando o corpo dos stubs de API por chamadas `fetch` reais.
 - **Visual de app, não de marketing.** Replicar o dashboard dark limpo do app,
   não os cards flutuando sobre fotos de pessoas da landing page.
 - **Reaproveitar a base existente.** O frontend já é dark + fonte Geist + cards
-  glassmorphism (`variables.css` já diz "inspirada no Pierre"). Estender, não
+  glassmorphism (`variables.css` já diz "com tema dark"). Estender, não
   reescrever do zero.
 - **Costura de API limpa.** Cada domínio de dado é um módulo de API. Telas mock
   expõem o mesmo formato que o backend deverá retornar, documentado inline.
@@ -44,7 +44,7 @@ sidebar troca a seção ativa (mais hash na URL, ex. `#investimentos`).
 | 4 | **Investimentos** | Card "Investimentos"; donut por classe; total investido + nº de ativos; breakdown (renda fixa / variável / fundos) com variação ↑verde/↓vermelho | **mock** |
 | 5 | **Assinaturas** | Cards de assinatura (nome, valor, "em X dias") com countdown até a próxima cobrança | **mock** |
 | 6 | **Bancos** | Lista de contas conectadas: avatar + nome + saldo; botão "conectar banco" (placeholder) | **mock** |
-| 7 | **Pierre (Chat IA)** | Interface de chat: bolhas usuário/assistente, chips de sugestão rápida ("Me ajuda com um plano", "Tô apertado de grana"); respostas mock | **mock** |
+| 7 | **Assistente (Chat IA)** | Interface de chat: bolhas usuário/assistente, chips de sugestão rápida ("Me ajuda com um plano", "Tô apertado de grana"); respostas mock | **mock** |
 
 ## Arquitetura Frontend
 
@@ -106,7 +106,7 @@ comentário acima de cada bloco, para o backend implementar sem adivinhar.
 - `donut(canvas, labels, valores, cores)` — investimentos e entradas×saídas.
 - `barraEvolucao(canvas, ...)` — linha/barra de evolução mensal (visão geral).
 A barra de categorias multicolor é **CSS puro** (segmentos `flex` com `width %`),
-não Chart.js — mais fiel ao visual do Pierre.
+não Chart.js — mais fiel ao visual de referência.
 
 ### Componentes novos (CSS em components.css)
 
