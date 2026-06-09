@@ -25,7 +25,7 @@ let estadoFiltros = { tipo: 'todos', busca: '', dataInicio: '', dataFim: '' };
 // ============================================================
 // INICIALIZAÇÃO
 // ============================================================
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   // Redireciona para a tela de login caso não esteja autenticado
   if (!localStorage.getItem('access_token')) {
     window.location.href = window.location.protocol === 'file:' ? 'login.html' : '/login';
@@ -40,7 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
   inicializarFormTransacao();
   inicializarSecaoTransacoes();
   inicializarLogout();
-  loadCategorias();
+  await loadCategorias();
   carregarDashboard();
   carregarTodasTransacoes();
 });
@@ -149,7 +149,7 @@ function renderizarResumo(dados) {
   if (elDestaqueEm) elDestaqueEm.textContent = abaixo ? 'abaixo' : 'acima';
 
   // Série real do backend
-  const dias = (serie.anterior || []).length || 30;
+  const dias = Math.max((serie.atual || []).length, (serie.anterior || []).length) || 30;
   const labels = Array.from({ length: dias }, (_, i) => String(i + 1));
   criarLinhaComparativa('grafico-linha-gastos', labels, serie.atual || [], serie.anterior || [], serie.diaCorrente || dias);
 }
@@ -169,7 +169,8 @@ function emojiCategoria(cat) {
 
 async function loadCategorias() {
   try {
-    CATEGORIAS = await CategoriasAPI.listar();
+    const resposta = await CategoriasAPI.listar();
+    CATEGORIAS = Array.isArray(resposta) ? resposta : (resposta?.results ?? []);
   } catch (erro) {
     console.error('Erro ao carregar categorias:', erro.message);
     mostrarToast('Não foi possível carregar as categorias.', 'erro');
@@ -756,11 +757,8 @@ async function pagarConta(id) {
 
   try {
     await TransacoesAPI.atualizar(id, payloadAtualizado);
-    const idx = todasTransacoes.findIndex(t => String(t.id) === String(id));
-    if (idx > -1) todasTransacoes[idx] = { ...payloadAtualizado, id };
+    await carregarTodasTransacoes();
     carregarDashboard();
-    aplicarFiltros();
-    renderizarContasPagar();
     mostrarToast('Conta marcada como paga!', 'sucesso');
   } catch (erro) {
     console.error('Erro ao pagar conta:', erro.message);
