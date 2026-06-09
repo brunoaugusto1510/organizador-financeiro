@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 import Transaction from '../models/Transaction.js';
-import { parcelaDoMes } from '../utils/parcelas.js';
+import { parcelaDoMes, addMeses } from '../utils/parcelas.js';
 
 const tiposValidos = ['income', 'expense', 'pending'];
 
@@ -257,7 +257,8 @@ export const resumirDashboard = async (req, res) => {
     ]);
     const categorias = categoriasAgg.map((c) => ({ categoria: c._id || 'outros', total: c.total }));
 
-    // Parcelados: cada parcela impacta o mês em que vence (regime de competência).
+    // Parcelados (income/expense; por design não usam 'pending'): cada parcela
+    // impacta o mês em que vence — somada ao seu tipo, à série e à categoria.
     const parcelados = await Transaction.find({ user: userId, parcelas: { $gt: 1 } }, 'type amount category date parcelas');
     for (const p of parcelados) {
       const noMesAtual = parcelaDoMes(p, ano, mes);
@@ -268,8 +269,10 @@ export const resumirDashboard = async (req, res) => {
           entradas += p.amount;
         } else if (p.type === 'expense') {
           saidas += p.amount;
-          const dia = Math.min(new Date(p.date).getDate(), diasAtual);
-          for (let i = dia - 1; i < serieAtualFull.length; i++) serieAtualFull[i] += p.amount;
+          const vencAtual = addMeses(p.date, noMesAtual - 1);
+          const dia = Math.min(vencAtual.getDate(), diasAtual);
+          const valorSerie = Math.round(p.amount);
+          for (let i = dia - 1; i < serieAtualFull.length; i++) serieAtualFull[i] += valorSerie;
           const cat = p.category || 'outros';
           const alvo = categorias.find((c) => c.categoria === cat);
           if (alvo) alvo.total += p.amount;
@@ -278,8 +281,10 @@ export const resumirDashboard = async (req, res) => {
       }
       if (noMesAnterior && p.type === 'expense') {
         gastoAnterior += p.amount;
-        const diaAnt = Math.min(new Date(p.date).getDate(), diasAnterior);
-        for (let i = diaAnt - 1; i < serieAnterior.length; i++) serieAnterior[i] += p.amount;
+        const vencAnt = addMeses(p.date, noMesAnterior - 1);
+        const diaAnt = Math.min(vencAnt.getDate(), diasAnterior);
+        const valorSerieAnt = Math.round(p.amount);
+        for (let i = diaAnt - 1; i < serieAnterior.length; i++) serieAnterior[i] += valorSerieAnt;
       }
     }
 
