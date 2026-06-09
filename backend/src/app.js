@@ -4,6 +4,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import authRoutes from './routes/authRoutes.js';
 import transactionRoutes from './routes/transactionRoutes.js';
+import categoryRoutes from './routes/categoryRoutes.js';
 import connectDatabase from './config/database.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -32,6 +33,7 @@ async function ensureDatabase(req, res, next) {
 app.use('/api', ensureDatabase);
 app.use('/api/auth', authRoutes);
 app.use('/api/transactions', transactionRoutes);
+app.use('/api/categories', categoryRoutes);
 app.use('/api', (req, res) => {
   return res.status(404).json({
     success: false,

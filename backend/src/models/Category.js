@@ -7,6 +7,12 @@ const categorySchema = new mongoose.Schema(
       required: [true, 'O nome é obrigatório.'],
       trim: true,
     },
+    slug: {
+      type: String,
+      required: [true, 'O slug é obrigatório.'],
+      unique: true,
+      trim: true,
+    },
     type: {
       type: String,
       required: [true, 'O tipo é obrigatório.'],
@@ -14,6 +20,11 @@ const categorySchema = new mongoose.Schema(
         values: ['income', 'expense'],
         message: 'O tipo deve ser income ou expense.',
       },
+    },
+    icon: {
+      type: String,
+      trim: true,
+      default: '',
     },
   },
   {

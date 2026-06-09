@@ -13,14 +13,18 @@ dotenv.config({ path: path.join(__dirname, '../.env') });
 
 // Categorias padrão para popular o banco na primeira execução.
 const defaultCategories = [
-  { name: 'Salário', type: 'income' },
-  { name: 'Freelance', type: 'income' },
-  { name: 'Outros', type: 'income' },
-  { name: 'Alimentação', type: 'expense' },
-  { name: 'Transporte', type: 'expense' },
-  { name: 'Moradia', type: 'expense' },
-  { name: 'Lazer', type: 'expense' },
-  { name: 'Outros', type: 'expense' },
+  { slug: 'salario',      name: 'Salário',      type: 'income',  icon: '💰' },
+  { slug: 'renda_extra',  name: 'Renda Extra',  type: 'income',  icon: '💵' },
+  { slug: 'investimento', name: 'Investimento', type: 'income',  icon: '📈' },
+  { slug: 'moradia',      name: 'Moradia',      type: 'expense', icon: '🏠' },
+  { slug: 'alimentacao',  name: 'Alimentação',  type: 'expense', icon: '🍽️' },
+  { slug: 'transporte',   name: 'Transporte',   type: 'expense', icon: '🚗' },
+  { slug: 'saude',        name: 'Saúde',        type: 'expense', icon: '🏥' },
+  { slug: 'educacao',     name: 'Educação',     type: 'expense', icon: '📚' },
+  { slug: 'lazer',        name: 'Lazer',        type: 'expense', icon: '🎮' },
+  { slug: 'vestuario',    name: 'Vestuário',    type: 'expense', icon: '👕' },
+  { slug: 'utilidades',   name: 'Utilidades',   type: 'expense', icon: '💡' },
+  { slug: 'outros',       name: 'Outros',       type: 'expense', icon: '📦' },
 ];
 
 const seedCategories = async () => {
@@ -31,8 +35,8 @@ const seedCategories = async () => {
   for (const category of defaultCategories) {
     // upsert evita duplicar categorias em execuções repetidas.
     const result = await Category.updateOne(
-      { name: category.name, type: category.type },
-      { $setOnInsert: category },
+      { slug: category.slug },
+      { $set: category },
       { upsert: true }
     );
 
