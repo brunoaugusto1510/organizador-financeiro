@@ -34,6 +34,8 @@ const seedCategories = async () => {
 
   for (const category of defaultCategories) {
     // upsert evita duplicar categorias em execuções repetidas.
+    // $set é intencional: o seed é a fonte de verdade para as categorias padrão,
+    // então re-execuções atualizam name/type/icon pelo slug estável.
     const result = await Category.updateOne(
       { slug: category.slug },
       { $set: category },
@@ -43,8 +45,10 @@ const seedCategories = async () => {
     if (result.upsertedCount > 0) {
       inseridas += 1;
       console.log(`Inserida: ${category.name} (${category.type})`);
+    } else if (result.modifiedCount > 0) {
+      console.log(`Atualizada: ${category.name} (${category.type})`);
     } else {
-      console.log(`Já existe: ${category.name} (${category.type})`);
+      console.log(`Sem mudança: ${category.name} (${category.type})`);
     }
   }
 

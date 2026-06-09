@@ -12,6 +12,7 @@ const categorySchema = new mongoose.Schema(
       required: [true, 'O slug é obrigatório.'],
       unique: true,
       trim: true,
+      lowercase: true,
     },
     type: {
       type: String,
