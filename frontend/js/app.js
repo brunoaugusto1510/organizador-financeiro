@@ -823,30 +823,93 @@ function renderizarBarraCategorias(containerId, transacoes) {
 }
 
 // ============================================================
-// TELA MOCK — Investimentos
+// TELA INVESTIMENTOS
 // ============================================================
 async function renderizarPaginaInvestimentos() {
   const el = document.getElementById('card-investimentos');
   if (!el) return;
-  const dados = await InvestimentosAPI.listar();
+
+  let dados = [];
+  try {
+    dados = await InvestimentosAPI.listar();
+  } catch (erro) {
+    console.error('Erro ao carregar investimentos:', erro.message);
+    mostrarToast('Não foi possível carregar os investimentos.', 'erro');
+    el.innerHTML = criarEstadoVazio('Não foi possível carregar os investimentos.');
+    return;
+  }
+
   const total = dados.reduce((s, d) => s + d.valor, 0);
+  const linhas = dados.map(d => `
+    <div class="investimento-row" data-id="${d.id}">
+      <span>${d.classe}</span>
+      <span>${formatarBRL(d.valor)}
+        <span class="${d.variacaoPct >= 0 ? 'variacao--alta' : 'variacao--baixa'}">
+          ${d.variacaoPct >= 0 ? '↑' : '↓'} ${Math.abs(d.variacaoPct)}%
+        </span>
+        <button class="btn-acao btn-acao--excluir" onclick="excluirInvestimento('${d.id}')" aria-label="Excluir">🗑️</button>
+      </span>
+    </div>`).join('');
+
   el.innerHTML = `
     <div class="card-saldo-total">
-      <p class="card__titulo">Total investido • ${dados.length} ativos</p>
+      <p class="card__titulo">Total investido • ${dados.length} ativo(s)</p>
       <p class="card-saldo-total__valor">${formatarBRL(total)}</p>
     </div>
+    <form id="form-investimento" class="form-investimento">
+      <input type="text" id="inv-classe" placeholder="Classe (ex.: Renda fixa)" required />
+      <input type="number" id="inv-aplicado" placeholder="Valor aplicado" min="0.01" step="0.01" required />
+      <input type="number" id="inv-atual" placeholder="Valor atual" min="0" step="0.01" required />
+      <button type="submit" class="btn btn--primario">Adicionar</button>
+    </form>
     <div class="grid-graficos">
       <section class="secao secao--grafico"><canvas id="grafico-donut-invest" height="240" role="img" aria-label="Distribuição dos investimentos"></canvas></section>
-      <section class="secao">${dados.map(d => `
-        <div class="investimento-row">
-          <span>${d.classe}</span>
-          <span>${formatarBRL(d.valor)}
-            <span class="${d.variacaoPct >= 0 ? 'variacao--alta' : 'variacao--baixa'}">
-              ${d.variacaoPct >= 0 ? '↑' : '↓'} ${Math.abs(d.variacaoPct)}%
-            </span>
-          </span>
-        </div>`).join('')}</section>
+      <section class="secao">${linhas || criarEstadoVazio('Nenhum investimento cadastrado ainda.')}</section>
     </div>`;
-  criarDonut('grafico-donut-invest', dados.map(d => d.classe), dados.map(d => d.valor));
+
+  if (dados.length) {
+    criarDonut('grafico-donut-invest', dados.map(d => d.classe), dados.map(d => d.valor));
+  }
+
+  document.getElementById('form-investimento')?.addEventListener('submit', salvarInvestimento);
+}
+
+async function salvarInvestimento(e) {
+  e.preventDefault();
+  const classe = document.getElementById('inv-classe').value.trim();
+  const valorAplicado = parseFloat(document.getElementById('inv-aplicado').value);
+  const valorAtual = parseFloat(document.getElementById('inv-atual').value);
+
+  if (!classe || !(valorAplicado > 0) || !(valorAtual >= 0)) {
+    mostrarToast('Preencha classe, valor aplicado (> 0) e valor atual.', 'erro');
+    return;
+  }
+
+  mostrarSpinner(true);
+  try {
+    await InvestimentosAPI.criar({ classe, valorAplicado, valorAtual });
+    mostrarToast('Investimento adicionado!', 'sucesso');
+    renderizarPaginaInvestimentos();
+  } catch (erro) {
+    console.error('Erro ao salvar investimento:', erro.message);
+    mostrarToast('Não foi possível salvar o investimento.', 'erro');
+  } finally {
+    mostrarSpinner(false);
+  }
+}
+
+async function excluirInvestimento(id) {
+  if (!window.confirm('Excluir este investimento?')) return;
+  mostrarSpinner(true);
+  try {
+    await InvestimentosAPI.excluir(id);
+    mostrarToast('Investimento excluído.', 'sucesso');
+    renderizarPaginaInvestimentos();
+  } catch (erro) {
+    console.error('Erro ao excluir investimento:', erro.message);
+    mostrarToast('Não foi possível excluir o investimento.', 'erro');
+  } finally {
+    mostrarSpinner(false);
+  }
 }
 
