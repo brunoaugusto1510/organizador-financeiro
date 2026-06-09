@@ -362,6 +362,7 @@ function abrirModal(transacao = null) {
     selecionarTipo('entrada');
   }
 
+  atualizarFeedbackParcelas();
   modal?.classList.remove('oculto');
   document.body.style.overflow = 'hidden';
   document.getElementById('transacao-descricao')?.focus();
@@ -388,13 +389,6 @@ function inicializarFormTransacao() {
   });
 
   // --- Feedback dinâmico de parcelas ---
-  const atualizarFeedbackParcelas = () => {
-    const total = parseFloat(document.getElementById('transacao-valor').value) || 0;
-    const n = parseInt(document.getElementById('transacao-parcelas')?.value ?? '1', 10) || 1;
-    const fb = document.getElementById('parcelas-feedback');
-    if (!fb) return;
-    fb.textContent = (n > 1 && total > 0) ? `${n}x de ${formatarBRL(total / n)}` : '';
-  };
   document.getElementById('transacao-valor')?.addEventListener('input', atualizarFeedbackParcelas);
   document.getElementById('transacao-parcelas')?.addEventListener('input', atualizarFeedbackParcelas);
 
@@ -404,6 +398,15 @@ function inicializarFormTransacao() {
     if (!validarFormTransacao()) return;
     await salvarTransacao();
   });
+}
+
+/** Atualiza o feedback "Nx de R$ y" do formulário de parcelas. */
+function atualizarFeedbackParcelas() {
+  const total = parseFloat(document.getElementById('transacao-valor').value) || 0;
+  const n = parseInt(document.getElementById('transacao-parcelas')?.value ?? '1', 10) || 1;
+  const fb = document.getElementById('parcelas-feedback');
+  if (!fb) return;
+  fb.textContent = (n > 1 && total > 0) ? `${n}x de ${formatarBRL(total / n)}` : '';
 }
 
 /** Ativa o botão de tipo e atualiza o campo hidden */
@@ -459,7 +462,9 @@ async function salvarTransacao() {
   const totalDigitado = parseFloat(document.getElementById('transacao-valor').value);
   const nParcelas = parseInt(document.getElementById('transacao-parcelas')?.value ?? '1', 10) || 1;
   const tipoSel = document.getElementById('transacao-tipo').value;
-  const valorParcela = (tipoSel !== 'pendente' && nParcelas > 1) ? (totalDigitado / nParcelas) : totalDigitado;
+  const valorParcela = (tipoSel !== 'pendente' && nParcelas > 1)
+    ? Math.round((totalDigitado / nParcelas) * 100) / 100
+    : totalDigitado;
 
   const payload = {
     tipo:       tipoSel,
