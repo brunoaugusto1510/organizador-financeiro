@@ -33,6 +33,8 @@ function normalizarTransacaoApi(transacao) {
     data: dataParaInput(transacao.date),
     categoria: transacao.category || '',
     observacao: transacao.description || '',
+    parcelas: transacao.parcelas ?? 1,
+    parcelasPagas: transacao.parcelasPagas ?? 0,
   };
 }
 
@@ -49,6 +51,8 @@ function montarPayloadTransacao(dados) {
     category: dados.categoria,
     date: dados.data,
     description: dados.observacao,
+    parcelas: dados.parcelas ?? 1,
+    ...(dados.parcelasPagas !== undefined ? { parcelasPagas: dados.parcelasPagas } : {}),
   };
 }
 
