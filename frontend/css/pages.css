@@ -210,11 +210,10 @@
 
 .filtros__campos .btn { height: 38px; }
 
-/* Abas Transações, Parcelamentos, Categorias e Investimentos — centralizadas e deslocadas para a direita */
+/* Abas Transações, Parcelamentos e Categorias — centralizadas e deslocadas para a direita */
 #transacoes,
 #parcelamentos,
-#categorias,
-#investimentos {
+#categorias {
   max-width: 1000px;
   margin-inline: auto;
   padding-left: 180px;
@@ -222,8 +221,7 @@
 
 #transacoes .pagina-titulo,
 #parcelamentos .pagina-titulo,
-#categorias .pagina-titulo,
-#investimentos .pagina-titulo { text-align: left; }
+#categorias .pagina-titulo { text-align: left; }
 
 .filtro-btn {
   padding: 7px 16px;

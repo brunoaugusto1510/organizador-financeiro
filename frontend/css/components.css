@@ -566,12 +566,5 @@
 .barra-categorias__item { display: flex; align-items: center; gap: var(--espaco-sm); font-size: 0.85rem; color: var(--cor-texto-secundario); }
 .barra-categorias__dot { width: 10px; height: 10px; border-radius: 50%; }
 
-/* --- Card de saldo total (hero) --- */
-.card-saldo-total { padding: var(--espaco-lg); background: var(--cor-fundo-card); border: 1px solid var(--cor-borda); border-radius: var(--raio-xl); margin-bottom: var(--espaco-lg); box-shadow: var(--sombra-card); }
-.card-saldo-total__valor { font-size: 2rem; font-weight: var(--peso-bold); }
-.card-saldo-total__saude { color: var(--cor-sucesso); font-size: 0.9rem; }
-
-/* --- Investimentos --- */
+/* --- Linha de item (lista de categorias) --- */
 .investimento-row { display: flex; align-items: center; justify-content: space-between; padding: var(--espaco-md) 0; border-bottom: 1px solid var(--cor-borda); }
-.variacao--alta { color: var(--cor-sucesso); }
-.variacao--baixa { color: var(--cor-erro); }

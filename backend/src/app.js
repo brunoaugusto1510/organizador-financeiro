@@ -5,7 +5,6 @@ import { fileURLToPath } from 'url';
 import authRoutes from './routes/authRoutes.js';
 import transactionRoutes from './routes/transactionRoutes.js';
 import categoryRoutes from './routes/categoryRoutes.js';
-import investmentRoutes from './routes/investmentRoutes.js';
 import connectDatabase from './config/database.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -35,7 +34,6 @@ app.use('/api', ensureDatabase);
 app.use('/api/auth', authRoutes);
 app.use('/api/transactions', transactionRoutes);
 app.use('/api/categories', categoryRoutes);
-app.use('/api/investments', investmentRoutes);
 app.use('/api', (req, res) => {
   return res.status(404).json({
     success: false,

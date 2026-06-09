@@ -140,21 +140,3 @@ const TransacoesAPI = {
 const CategoriasAPI = {
   listar: () => request('/categories'),
 };
-
-// ============================================================
-// SERVICOS DE INVESTIMENTOS
-// NOTA: o backend tambem expoe PUT /investments/:id (editar), mas a UI
-// atual so cria/exclui; o metodo editar fica deferido para um proximo passo.
-// ============================================================
-const InvestimentosAPI = {
-  listar: () => request('/investments'),
-
-  criar: (dados) => request('/investments', {
-    method: 'POST',
-    body: JSON.stringify(dados),
-  }),
-
-  excluir: (id) => request(`/investments/${id}`, {
-    method: 'DELETE',
-  }),
-};
