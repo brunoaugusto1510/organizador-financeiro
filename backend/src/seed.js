@@ -53,6 +53,14 @@ const seedCategories = async () => {
   }
 
   console.log(`\nSeed concluído. ${inseridas} categoria(s) inserida(s).`);
+
+  // Purga categorias fora do conjunto canônico (inclui registros legados sem slug).
+  const slugsCanonicos = defaultCategories.map((c) => c.slug);
+  const purge = await Category.deleteMany({ slug: { $nin: slugsCanonicos } });
+  if (purge.deletedCount > 0) {
+    console.log(`\nRemovidas ${purge.deletedCount} categoria(s) fora do conjunto canônico.`);
+  }
+
   await mongoose.disconnect();
   process.exit(0);
 };
