@@ -230,6 +230,7 @@ function inicializarNavegacao() {
     // Render lazy da tela alvo
     switch (alvo) {
       case 'categorias':    renderizarPaginaCategorias(); break;
+      case 'parcelamentos': renderizarPaginaParcelamentos(); break;
     }
   }
 
@@ -654,6 +655,42 @@ function renderizarPaginaCategorias() {
   const lista = document.getElementById('lista-categorias');
   if (lista) lista.innerHTML = dados.map(d => `
     <div class="investimento-row"><span>${labelCategoria(d.categoria)}</span><strong>${formatarBRL(d.total)}</strong></div>`).join('') || criarEstadoVazio('Sem gastos no período.');
+}
+
+// ============================================================
+// TELA PARCELAMENTOS
+// ============================================================
+function renderizarPaginaParcelamentos() {
+  const container = document.getElementById('lista-parcelamentos');
+  if (!container) return;
+
+  const planos = todasTransacoes.filter(pEhParcelado);
+  if (!planos.length) {
+    container.innerHTML = criarEstadoVazio('Nenhum parcelamento ativo. Crie uma transação com mais de 1 parcela.');
+    return;
+  }
+
+  container.innerHTML = planos.map(t => {
+    const total = t.parcelas;
+    const pagas = t.parcelasPagas || 0;
+    const valorTotal = t.valor * total;
+    const restante = (total - pagas) * t.valor;
+    const prox = pProximaEmAberto(t);
+    const proxTxt = prox ? formatarData(prox.vencimento.toISOString().split('T')[0]) : 'Concluído';
+    const pct = Math.round((pagas / total) * 100);
+    const badge = t.tipo === 'entrada' ? 'Entrada' : 'Saída';
+    return `
+      <div class="card-saldo-total" data-id="${t.id}">
+        <div class="parcelamento-cabecalho">
+          <strong>${t.descricao}</strong>
+          <span class="badge-categoria">${badge}</span>
+        </div>
+        <p class="parcelamento-meta">${total}x de ${formatarBRL(t.valor)} • total ${formatarBRL(valorTotal)}</p>
+        <div class="barra-progresso"><div class="barra-progresso__preench" style="width:${pct}%"></div></div>
+        <p class="parcelamento-meta">${pagas}/${total} pagas • restante ${formatarBRL(restante)} • próximo: ${proxTxt}</p>
+        <button class="btn-acao btn-acao--excluir" onclick="excluirTransacao('${t.id}')" aria-label="Excluir plano">🗑️ Excluir</button>
+      </div>`;
+  }).join('');
 }
 
 /** Abre o modal preenchido para edição */
