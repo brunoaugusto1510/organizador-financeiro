@@ -695,9 +695,28 @@ function renderizarContasPagar() {
   const totalPendenteEl = document.getElementById('total-contas-pendentes');
   if (!container || !totalPendenteEl) return;
 
-  // Filtra as pendentes
-  const pendentes = todasTransacoes.filter(t => t.tipo === 'pendente');
-  
+  // Pendentes avulsos (tipo pendente, não parcelado)
+  const avulsos = todasTransacoes
+    .filter(t => t.tipo === 'pendente' && !pEhParcelado(t))
+    .map(t => ({ id: t.id, descricao: t.descricao, categoria: t.categoria, data: t.data, valor: t.valor, parcela: null }));
+
+  // Próxima parcela em aberto de cada plano de SAÍDA parcelado
+  const parcelasAbertas = todasTransacoes
+    .filter(t => t.tipo === 'saida' && pEhParcelado(t) && !pConcluido(t))
+    .map(t => {
+      const prox = pProximaEmAberto(t);
+      return {
+        id: t.id,
+        descricao: t.descricao,
+        categoria: t.categoria,
+        data: prox.vencimento.toISOString().split('T')[0],
+        valor: prox.valor,
+        parcela: { indice: prox.indice, total: t.parcelas },
+      };
+    });
+
+  const pendentes = [...avulsos, ...parcelasAbertas];
+
   // Ordena por data (da mais próxima para a mais distante)
   pendentes.sort((a, b) => a.data.localeCompare(b.data));
 
@@ -710,24 +729,24 @@ function renderizarContasPagar() {
     return;
   }
 
-  const linhas = pendentes.map(t => `
-    <tr data-id="${t.id}">
-      <td>${formatarData(t.data)}</td>
-      <td><span class="descricao-cell">${t.descricao}</span></td>
-      <td><span class="badge-categoria">${labelCategoria(t.categoria)}</span></td>
-      <td class="valor-cell valor--pendente">${formatarBRL(t.valor)}</td>
+  const linhas = pendentes.map(linha => `
+    <tr data-id="${linha.id}">
+      <td>${formatarData(linha.data)}</td>
+      <td><span class="descricao-cell">${linha.descricao}${linha.parcela ? ` • Parcela ${linha.parcela.indice}/${linha.parcela.total}` : ''}</span></td>
+      <td><span class="badge-categoria">${labelCategoria(linha.categoria)}</span></td>
+      <td class="valor-cell valor--pendente">${formatarBRL(linha.valor)}</td>
       <td>
         <div class="acoes-tabela">
           <button class="btn-acao" style="color: var(--cor-sucesso); border-color: var(--cor-sucesso);"
-                  onclick="pagarConta('${t.id}')"
+                  onclick="pagarConta('${linha.id}')"
                   aria-label="Marcar como pago"
                   title="Pagar">✔️</button>
           <button class="btn-acao btn-acao--editar"
-                  onclick="editarTransacao('${t.id}')"
+                  onclick="editarTransacao('${linha.id}')"
                   aria-label="Editar conta"
                   title="Editar">✏️</button>
           <button class="btn-acao btn-acao--excluir"
-                  onclick="excluirTransacao('${t.id}')"
+                  onclick="excluirTransacao('${linha.id}')"
                   aria-label="Excluir conta"
                   title="Excluir">🗑️</button>
         </div>
@@ -757,24 +776,26 @@ async function pagarConta(id) {
   const transacao = todasTransacoes.find(t => String(t.id) === String(id));
   if (!transacao) return;
 
-  const confirmar = window.confirm(`Deseja marcar "${transacao.descricao}" como pago?`);
-  if (!confirmar) return;
+  const ehParcela = pEhParcelado(transacao);
+  const msg = ehParcela
+    ? `Marcar a próxima parcela de "${transacao.descricao}" como paga?`
+    : `Deseja marcar "${transacao.descricao}" como pago?`;
+  if (!window.confirm(msg)) return;
 
   mostrarSpinner(true);
-  const payloadAtualizado = {
-    ...transacao,
-    tipo: 'saida',
-    data: new Date().toISOString().split('T')[0],
-  };
+
+  const payload = ehParcela
+    ? { ...transacao, parcelasPagas: (transacao.parcelasPagas || 0) + 1 }
+    : { ...transacao, tipo: 'saida', data: new Date().toISOString().split('T')[0] };
 
   try {
-    await TransacoesAPI.atualizar(id, payloadAtualizado);
+    await TransacoesAPI.atualizar(id, payload);
     await carregarTodasTransacoes();
     carregarDashboard();
-    mostrarToast('Conta marcada como paga!', 'sucesso');
+    mostrarToast(ehParcela ? 'Parcela paga!' : 'Conta marcada como paga!', 'sucesso');
   } catch (erro) {
-    console.error('Erro ao pagar conta:', erro.message);
-    mostrarToast('Não foi possível marcar a conta como paga.', 'erro');
+    console.error('Erro ao pagar:', erro.message);
+    mostrarToast('Não foi possível registrar o pagamento.', 'erro');
   } finally {
     mostrarSpinner(false);
   }
