@@ -18,7 +18,7 @@ export const criarInvestimento = async (req, res) => {
   try {
     const { classe, valorAplicado, valorAtual } = req.body;
 
-    if (!classe || Number(valorAplicado) <= 0) {
+    if (!classe || valorAplicado === undefined || Number(valorAplicado) <= 0) {
       return res.status(400).json({
         success: false,
         message: 'Informe a classe e um valor aplicado maior que zero.',
@@ -67,6 +67,13 @@ export const editarInvestimento = async (req, res) => {
     if (classe !== undefined) dados.classe = classe;
     if (valorAplicado !== undefined) dados.valorAplicado = valorAplicado;
     if (valorAtual !== undefined) dados.valorAtual = valorAtual;
+
+    if (Object.keys(dados).length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Nenhum campo para atualizar.',
+      });
+    }
 
     const atualizado = await Investment.findOneAndUpdate(
       { _id: id, user: req.user._id },
