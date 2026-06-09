@@ -167,31 +167,81 @@
 .filtros {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--espaco-md);
   margin-bottom: var(--espaco-md);
 }
 
-.filtro-btn {
-  padding: 6px 14px;
-  border-radius: var(--raio-pill);
+/* Grupo segmentado de tipos (pílula única) */
+.filtros__tipos {
+  display: inline-flex;
+  gap: 2px;
+  padding: 4px;
+  background-color: var(--cor-fundo-card);
   border: 1px solid var(--cor-borda);
+  border-radius: var(--raio-pill);
+}
+
+/* Campos de busca/data/limpar */
+.filtros__campos {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--espaco-sm);
+}
+
+.filtros__campos input {
+  height: 38px;
+  padding: 0 12px;
+  font-size: 0.85rem;
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio-md);
+  background-color: var(--cor-fundo-input);
+  color: var(--cor-texto-principal);
+}
+
+.filtros__campos input[type="search"] { min-width: 200px; }
+.filtros__campos input[type="date"] { color-scheme: dark; }
+.filtros__campos input:focus {
+  outline: none;
+  border-color: var(--cor-primaria);
+}
+
+.filtros__campos .btn { height: 38px; }
+
+/* Abas Transações, Parcelamentos e Categorias — centralizadas e deslocadas para a direita */
+#transacoes,
+#parcelamentos,
+#categorias {
+  max-width: 1000px;
+  margin-inline: auto;
+  padding-left: 180px;
+}
+
+#transacoes .pagina-titulo,
+#parcelamentos .pagina-titulo,
+#categorias .pagina-titulo { text-align: left; }
+
+.filtro-btn {
+  padding: 7px 16px;
+  border-radius: var(--raio-pill);
+  border: none;
   font-family: inherit;
   font-size: 0.82rem;
   font-weight: var(--peso-medio);
   color: var(--cor-texto-secundario);
-  background-color: var(--cor-fundo-card);
+  background-color: transparent;
   cursor: pointer;
   transition: all var(--transicao);
 }
 
 .filtro-btn:hover {
-  border-color: var(--cor-borda-forte);
   color: var(--cor-texto-principal);
 }
 
 .filtro-btn.ativo {
   background-color: var(--cor-entrada);
-  border-color: var(--cor-entrada-borda);
   color: var(--cor-entrada-texto);
 }
 
@@ -264,5 +314,246 @@
 
 .grid-graficos { display: grid; grid-template-columns: 1fr 1fr; gap: var(--espaco-lg); margin-bottom: var(--espaco-lg); }
 .secao--grafico { display: flex; flex-direction: column; gap: var(--espaco-md); }
-.grid-assinaturas { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: var(--espaco-md); }
 @media (max-width: 720px) { .grid-graficos { grid-template-columns: 1fr; } }
+
+/* =============================================
+   DASHBOARD — VISÃO GERAL (pílulas + 2 painéis)
+   ============================================= */
+
+/* Desloca o conteúdo do dashboard para a direita */
+#dashboard {
+  padding-left: 180px;
+}
+
+/* Navegação de contexto em pílulas (individuais, centralizadas) */
+.pill-nav {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--espaco-sm);
+  margin-bottom: var(--espaco-xl);
+  padding-left: 180px;
+}
+
+.pill-nav__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 18px;
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio-pill);
+  background: var(--cor-fundo-card);
+  font-size: 0.9rem;
+  font-weight: var(--peso-medio);
+  color: var(--cor-texto-secundario);
+  white-space: nowrap;
+  transition: color var(--transicao), border-color var(--transicao), background-color var(--transicao);
+}
+
+.pill-nav__icone { width: 16px; height: 16px; flex-shrink: 0; }
+
+.pill-nav__item:hover {
+  color: var(--cor-texto-principal);
+  border-color: var(--cor-borda-forte);
+}
+
+.pill-nav__item.ativo {
+  color: var(--cor-primaria);
+  border-color: var(--cor-primaria);
+  background: var(--cor-entrada);
+  font-weight: var(--peso-bold);
+  box-shadow: var(--glow-primaria);
+}
+
+/* Grid de 2 colunas iguais — largura FIXA (left-anchored) pra deslizar inteiro com a sidebar */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--espaco-lg);
+  width: min(1608px, 100%);
+}
+
+/* Permite encolher uniforme (canvas não trava a coluna) em telas estreitas */
+.painel { min-width: 0; }
+
+@media (max-width: 900px) {
+  .dashboard-grid { grid-template-columns: 1fr; }
+}
+
+/* Painel base */
+.painel {
+  display: flex;
+  flex-direction: column;
+  padding: var(--espaco-lg);
+  min-height: 422px;
+  background: var(--cor-fundo-card);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio-xl);
+  box-shadow: var(--sombra-card);
+}
+
+/* --- Card esquerda: insight --- */
+.painel--insight { gap: var(--espaco-lg); }
+
+.insight__titulo {
+  font-size: 2rem;
+  font-weight: var(--peso-bold);
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  color: var(--cor-primaria);
+}
+
+.insight__mensagem {
+  margin-top: var(--espaco-sm);
+  color: var(--cor-texto-secundario);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.insight__kpis {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--espaco-sm);
+  margin-top: auto;
+}
+
+.kpi {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: var(--espaco-md);
+  background: var(--cor-fundo-input);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio-lg);
+}
+
+.kpi__rotulo {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--cor-texto-placeholder);
+}
+
+.kpi__valor {
+  font-size: 1.15rem;
+  font-weight: var(--peso-bold);
+  color: var(--cor-texto-principal);
+}
+
+.kpi__valor--positivo { color: var(--cor-sucesso); }
+
+.insight__rodape {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: var(--espaco-md);
+  border-top: 1px solid var(--cor-borda);
+  font-size: 0.8rem;
+  color: var(--cor-texto-placeholder);
+}
+
+.insight__autor, .insight__data {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.insight__autor svg, .insight__data svg { width: 14px; height: 14px; }
+.insight__autor strong { color: var(--cor-texto-secundario); font-weight: var(--peso-medio); }
+
+/* --- Card direita: gráfico --- */
+.painel--grafico { gap: var(--espaco-sm); }
+
+.painel__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.painel__rotulo {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--cor-texto-secundario);
+  font-weight: var(--peso-medio);
+}
+
+.painel__resumo { margin-bottom: var(--espaco-xs); }
+
+.painel__destaque {
+  font-size: 1.9rem;
+  font-weight: var(--peso-bold);
+  letter-spacing: -0.01em;
+  color: var(--cor-texto-principal);
+}
+
+.painel__destaque em {
+  font-style: normal;
+  font-size: 0.95rem;
+  font-weight: var(--peso-normal);
+  color: var(--cor-texto-placeholder);
+}
+
+.painel__comparativo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.badge-variacao {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: var(--raio-sm);
+  font-size: 0.78rem;
+  font-weight: var(--peso-bold);
+  background: var(--cor-entrada);
+  color: var(--cor-entrada-texto);
+}
+
+.badge-variacao--alta { background: var(--cor-saida); color: var(--cor-saida-texto); }
+
+.painel__sub {
+  font-size: 0.82rem;
+  color: var(--cor-texto-placeholder);
+}
+
+.painel__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.85rem;
+  color: var(--cor-texto-secundario);
+  font-weight: var(--peso-medio);
+}
+
+.painel__link svg { width: 13px; height: 13px; }
+.painel__link:hover { color: var(--cor-primaria); }
+
+.painel__chart {
+  position: relative;
+  flex: 1;
+  min-height: 260px;
+}
+
+.painel__legenda {
+  display: flex;
+  gap: var(--espaco-lg);
+  font-size: 0.82rem;
+  color: var(--cor-texto-secundario);
+}
+
+.legenda__item { display: inline-flex; align-items: center; gap: 8px; }
+
+.legenda__item::before {
+  content: '';
+  width: 16px;
+  height: 0;
+  border-top-width: 2px;
+  border-top-style: solid;
+}
+
+.legenda__item--atual::before { border-top-color: var(--cor-primaria); border-top-width: 3px; }
+.legenda__item--anterior::before { border-top-color: #52525b; border-top-style: dashed; }

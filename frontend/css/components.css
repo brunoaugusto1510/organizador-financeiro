@@ -463,23 +463,6 @@
   margin-top: var(--espaco-sm);
 }
 
-/* --- Avatar de iniciais no header --- */
-.avatar-header {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, var(--cor-primaria), #047857);
-  color: #042c1d;
-  font-size: 0.78rem;
-  font-weight: var(--peso-bold);
-  letter-spacing: 0.02em;
-  cursor: default;
-  user-select: none;
-  box-shadow: 0 0 0 1px rgba(16, 185, 129, 0.3), 0 4px 12px rgba(16, 185, 129, 0.18);
-}
 
 /* --- Valor colorido na tabela conforme tipo --- */
 .valor-cell {
@@ -592,22 +575,3 @@
 .investimento-row { display: flex; align-items: center; justify-content: space-between; padding: var(--espaco-md) 0; border-bottom: 1px solid var(--cor-borda); }
 .variacao--alta { color: var(--cor-sucesso); }
 .variacao--baixa { color: var(--cor-erro); }
-
-/* --- Assinaturas --- */
-.assinatura-card { padding: var(--espaco-lg); background: var(--cor-fundo-card); border: 1px solid var(--cor-borda); border-radius: var(--raio-lg); text-align: center; }
-.assinatura-card__valor { font-size: 1.4rem; font-weight: var(--peso-bold); }
-.assinatura-card__prazo { font-size: 0.8rem; color: var(--cor-texto-secundario); margin-top: var(--espaco-sm); }
-
-/* --- Bancos --- */
-.banco-row { display: flex; align-items: center; gap: var(--espaco-md); padding: var(--espaco-md); border: 1px solid var(--cor-borda); border-radius: var(--raio-lg); margin-bottom: var(--espaco-sm); background: var(--cor-fundo-card); }
-.banco-row__saldo { margin-left: auto; font-weight: var(--peso-bold); }
-
-/* --- Chat --- */
-.chat-janela { display: flex; flex-direction: column; gap: var(--espaco-sm); min-height: 320px; padding: var(--espaco-md); background: var(--cor-fundo-card); border: 1px solid var(--cor-borda); border-radius: var(--raio-lg); }
-.chat-bubble { max-width: 75%; padding: var(--espaco-sm) var(--espaco-md); border-radius: var(--raio-lg); }
-.chat-bubble--usuario { align-self: flex-end; background: var(--cor-primaria); color: #042; }
-.chat-bubble--assistente { align-self: flex-start; background: var(--cor-fundo-elevado); color: var(--cor-texto-principal); }
-.chat-chips { display: flex; flex-wrap: wrap; gap: var(--espaco-sm); margin: var(--espaco-md) 0; }
-.chat-chip { padding: 6px 12px; border: 1px solid var(--cor-borda-forte); border-radius: var(--raio-pill); background: transparent; color: var(--cor-texto-secundario); cursor: pointer; }
-.chat-form { display: flex; gap: var(--espaco-sm); }
-.chat-form input { flex: 1; }

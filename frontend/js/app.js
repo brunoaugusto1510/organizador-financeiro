@@ -49,6 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
   exibirNomeUsuario();
   inicializarNavegacao();
   inicializarMenuMobile();
+  inicializarColapsoSidebar();
   inicializarModal();
   inicializarFormTransacao();
   inicializarSecaoTransacoes();
@@ -62,26 +63,21 @@ document.addEventListener('DOMContentLoaded', () => {
 // ============================================================
 function exibirNomeUsuario() {
   const nome = localStorage.getItem('user_name') || 'Usuário';
+  const iniciais = nome
+    .split(' ')
+    .slice(0, 2)
+    .map(p => p[0]?.toUpperCase())
+    .join('');
 
   // Saudação no título da página
   const elNome = document.getElementById('nome-usuario');
   if (elNome) elNome.textContent = nome;
 
-  // Exibe iniciais no header (avatar simples)
-  const elHeader = document.getElementById('header-usuario');
-  if (elHeader) {
-    const iniciais = nome
-      .split(' ')
-      .slice(0, 2)
-      .map(p => p[0]?.toUpperCase())
-      .join('');
-
-    elHeader.innerHTML = `
-      <span class="avatar-header" title="${nome}" aria-label="Usuário: ${nome}">
-        ${iniciais}
-      </span>
-    `;
-  }
+  // Rodapé da sidebar (avatar + nome)
+  const elSidebarNome = document.getElementById('sidebar-nome');
+  if (elSidebarNome) elSidebarNome.textContent = nome;
+  const elSidebarAvatar = document.getElementById('sidebar-avatar');
+  if (elSidebarAvatar) elSidebarAvatar.textContent = iniciais;
 }
 
 // ============================================================
@@ -103,10 +99,7 @@ function inicializarLogout() {
 // CARREGAMENTO DO DASHBOARD (resumo + transações recentes)
 // ============================================================
 async function carregarDashboard() {
-  await Promise.all([
-    carregarResumo(),
-    carregarTransacoesRecentes(),
-  ]);
+  await carregarResumo();
 }
 
 // --- Resumo financeiro ---
@@ -125,19 +118,103 @@ async function carregarResumo() {
   }
 }
 
+const ROTULOS_CATEGORIA = {
+  salario: 'Salário', renda_extra: 'Renda Extra', moradia: 'Moradia',
+  alimentacao: 'Alimentação', transporte: 'Transporte', saude: 'Saúde',
+  educacao: 'Educação', lazer: 'Lazer', utilidades: 'Utilidades', outros: 'Outros',
+};
+
+const EMOJI_CATEGORIA = {
+  salario: '💰', renda_extra: '💵', moradia: '🏠', alimentacao: '🍽️',
+  transporte: '🚗', saude: '🏥', educacao: '📚', lazer: '🎮',
+  utilidades: '💡', outros: '📦',
+};
+
 function renderizarResumo({ saldo, entradas, saidas, pendentes }) {
-  const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = formatarBRL(v ?? 0); };
-  set('saldo-valor', saldo); set('entradas-valor', entradas);
-  set('saidas-valor', saidas); set('pendentes-valor', pendentes);
+  const txt = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+  const transacoes = todasTransacoes.length ? todasTransacoes : DEMO.transacoes;
+  const nome = (localStorage.getItem('user_name') || 'Você').split(' ')[0];
+  const gasto = saidas ?? 0;
+  const mes = new Date().toLocaleDateString('pt-BR', { month: 'long' });
 
-  const hero = document.getElementById('card-saldo-total');
-  if (hero) hero.innerHTML = `
-    <p class="card__titulo">Saldo total</p>
-    <p class="card-saldo-total__valor">${formatarBRL(saldo ?? 0)}</p>
-    <p class="card-saldo-total__saude">Sua saúde financeira está ${(saldo ?? 0) >= 0 ? 'em dia' : 'no vermelho'}</p>`;
+  // Comparativo com mês anterior (estimativa enquanto API não fornece histórico)
+  const gastoAnterior = gasto * 1.18 || 0;
+  const difPct = gastoAnterior ? ((gasto - gastoAnterior) / gastoAnterior) * 100 : 0;
+  const diferenca = Math.abs(gastoAnterior - gasto);
+  const abaixo = gasto <= gastoAnterior;
 
-  criarDonut('grafico-donut-resumo', ['Entradas', 'Saídas'], [entradas ?? 0, saidas ?? 0]);
-  renderizarBarraCategorias('barra-categorias-dashboard', todasTransacoes.length ? todasTransacoes : DEMO.transacoes);
+  // Categoria principal (maior soma de saídas)
+  const porCategoria = {};
+  transacoes
+    .filter(t => t.tipo === 'saida' || t.tipo === 'pendente')
+    .forEach(t => { porCategoria[t.categoria] = (porCategoria[t.categoria] || 0) + t.valor; });
+  const topCat = Object.entries(porCategoria).sort((a, b) => b[1] - a[1])[0];
+  const categoriaPrincipal = topCat ? (ROTULOS_CATEGORIA[topCat[0]] || topCat[0]) : '—';
+  const categoriaEmoji = topCat ? (EMOJI_CATEGORIA[topCat[0]] || '📦') : '';
+
+  // --- Card insight ---
+  txt('insight-mensagem',
+    `${nome}, seu gasto quase não mudou, mas as parcelas ainda pesam ${formatarBRL(pendentes ?? 0)} este mês.`);
+  txt('kpi-gasto-rotulo', `Gasto em ${mes}`);
+  txt('kpi-gasto', formatarBRL(gasto));
+  txt('kpi-comparativo', `${difPct <= 0 ? '↘' : '↗'} ${Math.abs(difPct).toFixed(0)}%`);
+  txt('kpi-categoria', `${categoriaEmoji} ${categoriaPrincipal}`.trim());
+  txt('insight-data', formatarDataExtenso(new Date()));
+
+  const elComp = document.getElementById('kpi-comparativo');
+  if (elComp) elComp.classList.toggle('kpi__valor--positivo', difPct <= 0);
+
+  // --- Card gráfico ---
+  txt('chart-destaque', formatarBRL(diferenca));
+  txt('chart-variacao', `${difPct <= 0 ? '▾' : '▴'} ${Math.abs(difPct).toFixed(1)}%`);
+  txt('chart-anterior', `vs ${formatarBRL(gastoAnterior)} mês anterior`);
+
+  const elBadge = document.getElementById('chart-variacao');
+  if (elBadge) elBadge.classList.toggle('badge-variacao--alta', difPct > 0);
+
+  const elDestaqueEm = document.querySelector('.painel__destaque em');
+  if (elDestaqueEm) elDestaqueEm.textContent = abaixo ? 'abaixo' : 'acima';
+
+  const serie = construirSerieGastos(transacoes, gasto, gastoAnterior);
+  criarLinhaComparativa('grafico-linha-gastos', serie.labels, serie.atual, serie.anterior, serie.diaAtual);
+}
+
+// Constrói séries diárias cumulativas (este mês × mês passado) para o gráfico de linha
+function construirSerieGastos(transacoes, totalAtual, totalAnterior) {
+  const hoje = new Date();
+  const dias = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0).getDate(); // dias no mês
+  const diaAtual = Math.min(hoje.getDate(), dias);
+  const labels = Array.from({ length: dias }, (_, i) => String(i + 1));
+
+  // Acumula saídas por dia do mês a partir das transações
+  const porDia = new Array(dias).fill(0);
+  transacoes
+    .filter(t => t.tipo === 'saida' || t.tipo === 'pendente')
+    .forEach(t => {
+      const dia = new Date(t.data).getDate();
+      if (dia >= 1 && dia <= dias) porDia[dia - 1] += t.valor;
+    });
+
+  // "Este mês": cumulativo só até hoje (resto null = linha curta com ponto na ponta)
+  let acc = 0;
+  const temDados = porDia.some(v => v > 0);
+  const atual = labels.map((_, i) => {
+    if (i + 1 > diaAtual) return null;
+    acc += temDados ? porDia[i] : totalAtual / diaAtual;
+    return Math.round(acc);
+  });
+
+  // "Mês passado": curva cheia que termina no total anterior (sobe em degraus)
+  const escala = totalAtual ? totalAnterior / totalAtual : 1.18;
+  const totAnt = Math.round((temDados ? acc : totalAtual) * escala);
+  const anterior = labels.map((_, i) => Math.round(totAnt * Math.pow((i + 1) / dias, 0.7)));
+
+  return { labels, atual, anterior, diaAtual };
+}
+
+// Formata data como "09 de jun. de 2026"
+function formatarDataExtenso(data) {
+  return data.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' });
 }
 
 // --- Transações recentes ---
@@ -166,7 +243,7 @@ function renderizarTransacoesRecentes(lista) {
 // NAVEGAÇÃO ENTRE SEÇÕES (SPA simples via hash)
 // ============================================================
 function inicializarNavegacao() {
-  const linksNav = document.querySelectorAll('.nav__item a');
+  const linksNav = document.querySelectorAll('.nav__item a, .pill-nav__item');
   const secoes   = document.querySelectorAll('.pagina');
 
   function ativarSecao(hash) {
@@ -179,23 +256,21 @@ function inicializarNavegacao() {
       l.removeAttribute('aria-current');
     });
 
-    // Ativa somente a seção e o link corretos
+    // Ativa a seção e todos os links (sidebar + pílulas) do mesmo destino
     const secaoAtiva = document.getElementById(alvo);
-    const linkAtivo  = document.querySelector(`a[href="#${alvo}"]`);
-
     if (secaoAtiva) secaoAtiva.classList.add('pagina--ativa');
-    if (linkAtivo) {
-      linkAtivo.classList.add('ativo');
-      linkAtivo.setAttribute('aria-current', 'page');
-    }
+
+    document.querySelectorAll(`a[href="#${alvo}"]`).forEach(link => {
+      if (link.classList.contains('nav__item') || link.matches('.nav__item a, .pill-nav__item')) {
+        link.classList.add('ativo');
+        link.setAttribute('aria-current', 'page');
+      }
+    });
 
     // Render lazy da tela alvo
     switch (alvo) {
       case 'categorias':    renderizarPaginaCategorias(); break;
       case 'investimentos': renderizarPaginaInvestimentos(); break;
-      case 'assinaturas':   renderizarPaginaAssinaturas(); break;
-      case 'bancos':        renderizarPaginaBancos(); break;
-      case 'chat':          inicializarChat(); break;
     }
   }
 
@@ -241,6 +316,35 @@ function fecharMenuMobile() {
   document.getElementById('sidebar')?.classList.remove('aberta');
   document.getElementById('sidebar-overlay')?.classList.remove('ativo');
   document.getElementById('menu-btn')?.setAttribute('aria-expanded', 'false');
+}
+
+// ============================================================
+// COLAPSO SIDEBAR (rail, desktop) — persiste em localStorage
+// ============================================================
+const CHAVE_SIDEBAR_COLAPSADA = 'sidebar-colapsada';
+
+function inicializarColapsoSidebar() {
+  const btn = document.getElementById('sidebar-colapsar');
+  const sidebar = document.getElementById('sidebar');
+
+  if (!btn || !sidebar) return;
+
+  const colapsada = localStorage.getItem(CHAVE_SIDEBAR_COLAPSADA) === 'true';
+  aplicarColapsoSidebar(sidebar, btn, colapsada);
+
+  btn.addEventListener('click', () => {
+    const novo = !sidebar.classList.contains('colapsada');
+    aplicarColapsoSidebar(sidebar, btn, novo);
+    localStorage.setItem(CHAVE_SIDEBAR_COLAPSADA, String(novo));
+  });
+}
+
+function aplicarColapsoSidebar(sidebar, btn, colapsada) {
+  sidebar.classList.toggle('colapsada', colapsada);
+  const rotulo = colapsada ? 'Abrir barra lateral' : 'Recolher barra lateral';
+  btn.setAttribute('aria-pressed', String(colapsada));
+  btn.setAttribute('aria-label', rotulo);
+  btn.setAttribute('data-tooltip', rotulo);
 }
 
 // ============================================================
@@ -806,7 +910,7 @@ function renderizarBarraCategorias(containerId, transacoes) {
 }
 
 // ============================================================
-// TELAS MOCK — Investimentos, Assinaturas, Bancos
+// TELA MOCK — Investimentos
 // ============================================================
 async function renderizarPaginaInvestimentos() {
   const el = document.getElementById('card-investimentos');
@@ -833,68 +937,3 @@ async function renderizarPaginaInvestimentos() {
   criarDonut('grafico-donut-invest', dados.map(d => d.classe), dados.map(d => d.valor));
 }
 
-async function renderizarPaginaAssinaturas() {
-  const el = document.getElementById('lista-assinaturas');
-  if (!el) return;
-  const dados = await AssinaturasAPI.listar();
-  const hoje = new Date();
-  el.innerHTML = dados.map(a => {
-    const dias = Math.max(0, Math.ceil((new Date(a.proximaCobranca) - hoje) / 86400000));
-    return `<div class="assinatura-card">
-      ${avatarMerchant(a.nome)}
-      <p class="transacao-card__desc">${a.nome}</p>
-      <p class="assinatura-card__valor">${formatarBRL(a.valor)}</p>
-      <p class="assinatura-card__prazo">em ${dias} dias</p>
-    </div>`;
-  }).join('');
-}
-
-async function renderizarPaginaBancos() {
-  const el = document.getElementById('lista-bancos');
-  if (!el) return;
-  const dados = await BancosAPI.listar();
-  el.innerHTML = dados.map(b => `
-    <div class="banco-row">${avatarMerchant(b.nome)}<span>${b.nome}</span><span class="banco-row__saldo">${formatarBRL(b.saldo)}</span></div>`).join('');
-}
-
-// ============================================================
-// TELA CHAT IA (mock)
-// ============================================================
-const CHAT_CHIPS = ['Me ajuda com um plano', 'Tô apertado de grana', 'Quanto gastei esse mês?'];
-
-function adicionarBolhaChat(texto, autor) {
-  const janela = document.getElementById('chat-janela');
-  if (!janela) return;
-  const div = document.createElement('div');
-  div.className = `chat-bubble chat-bubble--${autor}`;
-  div.textContent = texto;
-  janela.appendChild(div);
-  janela.scrollTop = janela.scrollHeight;
-}
-
-async function enviarMensagemChat(texto) {
-  if (!texto.trim()) return;
-  adicionarBolhaChat(texto, 'usuario');
-  const { resposta } = await ChatAPI.enviar(texto);
-  adicionarBolhaChat(resposta, 'assistente');
-}
-
-function inicializarChat() {
-  const chips = document.getElementById('chat-chips');
-  if (chips && !chips.dataset.pronto) {
-    chips.innerHTML = CHAT_CHIPS.map(c => `<button class="chat-chip" type="button">${c}</button>`).join('');
-    chips.querySelectorAll('.chat-chip').forEach(b => b.addEventListener('click', () => enviarMensagemChat(b.textContent)));
-    chips.dataset.pronto = '1';
-  }
-  const form = document.getElementById('chat-form');
-  if (form && !form.dataset.pronto) {
-    form.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const input = document.getElementById('chat-input');
-      enviarMensagemChat(input.value);
-      input.value = '';
-    });
-    form.dataset.pronto = '1';
-    adicionarBolhaChat('Oi! Sou seu assistente financeiro. Como posso te ajudar com suas finanças?', 'assistente');
-  }
-}

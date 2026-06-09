@@ -100,13 +100,153 @@
   border-right: 1px solid var(--cor-borda);
   padding: var(--espaco-lg) 0;
   transform: translateX(-100%);
-  transition: transform var(--transicao);
+  transition: transform var(--transicao), width var(--transicao);
   z-index: 90;
+  overflow-x: hidden;
   overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar .nav {
+  flex: 1;
 }
 
 .sidebar.aberta {
   transform: translateX(0);
+}
+
+/* Rodapé do usuário (canto inferior esquerdo) */
+.sidebar__usuario {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: var(--espaco-sm);
+  padding: var(--espaco-md) var(--espaco-md) 0;
+  border-top: 1px solid var(--cor-borda);
+}
+
+.sidebar__avatar {
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  font-weight: var(--peso-bold);
+  color: #04130d;
+  background: linear-gradient(135deg, var(--cor-primaria), var(--cor-primaria-light));
+}
+
+.sidebar__nome {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.9rem;
+  font-weight: var(--peso-medio);
+  color: var(--cor-texto-principal);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sidebar__config {
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--cor-borda);
+  border-radius: 50%;
+  background: var(--cor-fundo-elevado);
+  color: var(--cor-texto-secundario);
+  cursor: pointer;
+  transition: color var(--transicao), border-color var(--transicao);
+}
+
+.sidebar__config:hover {
+  color: var(--cor-texto-principal);
+  border-color: var(--cor-borda-forte);
+}
+
+.sidebar__config svg { width: 16px; height: 16px; }
+
+/* No rail colapsado: só avatar centrado */
+.sidebar.colapsada .sidebar__usuario {
+  justify-content: center;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.sidebar.colapsada .sidebar__nome,
+.sidebar.colapsada .sidebar__config { display: none; }
+
+/* Texto dos itens — esconde quando rail colapsado */
+.nav__texto {
+  white-space: nowrap;
+  overflow: hidden;
+  opacity: 1;
+  transition: opacity var(--transicao);
+}
+
+/* Botão recolher (só desktop) */
+.sidebar__colapsar {
+  position: relative;
+  display: none;
+  align-self: flex-end;
+  align-items: center;
+  gap: 12px;
+  margin: 0 var(--espaco-sm) var(--espaco-sm);
+  padding: 10px 12px;
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio-md);
+  background: transparent;
+  color: var(--cor-texto-secundario);
+  font-size: 0.9rem;
+  font-weight: var(--peso-medio);
+  cursor: pointer;
+  transition: background-color var(--transicao), color var(--transicao);
+}
+
+.sidebar__colapsar:hover {
+  background-color: rgba(255, 255, 255, 0.04);
+  color: var(--cor-texto-principal);
+}
+
+.sidebar__colapsar-icone {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+/* Tooltip flutuante do botão */
+.sidebar__colapsar::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  left: calc(100% + 10px);
+  top: 50%;
+  transform: translateY(-50%) translateX(-4px);
+  white-space: nowrap;
+  padding: 6px 10px;
+  border-radius: var(--raio-sm);
+  border: 1px solid var(--cor-borda-forte);
+  background-color: var(--cor-fundo-elevado);
+  color: var(--cor-texto-principal);
+  font-size: 0.8rem;
+  font-weight: var(--peso-medio);
+  box-shadow: var(--sombra-elevado);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--transicao), transform var(--transicao);
+  z-index: 100;
+}
+
+.sidebar__colapsar:hover::after,
+.sidebar__colapsar:focus-visible::after {
+  opacity: 1;
+  transform: translateY(-50%) translateX(0);
 }
 
 .sidebar-overlay {
@@ -210,6 +350,10 @@
     display: none !important;
   }
 
+  .sidebar__colapsar {
+    display: flex;
+  }
+
   .app-container {
     flex-direction: row;
     flex-wrap: wrap;
@@ -222,6 +366,44 @@
   .main-content {
     margin-left: var(--largura-sidebar);
     padding: var(--espaco-lg);
+    transition: margin-left var(--transicao);
+  }
+
+  /* --- Rail colapsado (pinado) --- */
+  .sidebar.colapsada {
+    width: var(--largura-sidebar-rail);
+  }
+
+  /* Conteúdo acompanha a largura do rail */
+  .sidebar.colapsada ~ .main-content {
+    margin-left: var(--largura-sidebar-rail);
+  }
+
+  /* Esconde rótulos no rail (display:none pra não ocupar espaço) */
+  .sidebar.colapsada .nav__texto {
+    display: none;
+  }
+
+  /* Centraliza ícones no rail */
+  .sidebar.colapsada .nav__lista {
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  .sidebar.colapsada .nav__item a,
+  .sidebar.colapsada .sidebar__colapsar {
+    justify-content: center;
+    gap: 0;
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  /* No rail, ícone centrado em caixa quadrada confortável */
+  .sidebar.colapsada .sidebar__colapsar {
+    align-self: center;
+    width: 40px;
+    height: 40px;
+    padding: 0;
   }
 }
 
@@ -231,6 +413,5 @@
 @media (min-width: 1024px) {
   .main-content {
     padding: var(--espaco-xl);
-    max-width: 1280px;
   }
 }

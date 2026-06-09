@@ -138,22 +138,7 @@ const TransacoesAPI = {
 // STUBS MOCK — backend substitui o corpo por fetch real,
 // mantendo o mesmo retorno (ver contratos em mock-data.js).
 // ============================================================
-const BancosAPI = {
-  // Backend: return normalizar(await request('/banks'));
-  listar: async () => MOCK.bancos,
-};
-
 const InvestimentosAPI = {
   // Backend: return await request('/investments');
   listar: async () => MOCK.investimentos,
-};
-
-const AssinaturasAPI = {
-  // Backend: return await request('/subscriptions');
-  listar: async () => MOCK.assinaturas,
-};
-
-const ChatAPI = {
-  // Backend: return await request('/chat', { method:'POST', body: JSON.stringify({ mensagem }) });
-  enviar: async (mensagem) => ({ resposta: MOCK.respostaChat(mensagem) }),
 };

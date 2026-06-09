@@ -78,5 +78,6 @@
 
   /* --- Layout --- */
   --largura-sidebar: 240px;
+  --largura-sidebar-rail: 56px;
   --altura-header: 64px;
 }

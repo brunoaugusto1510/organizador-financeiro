@@ -26,65 +26,135 @@
       </div>
       <div class="header__actions">
         <button class="btn btn--primario" id="btn-nova-transacao" type="button">+ Nova transação</button>
-        <span id="header-usuario"></span>
       </div>
     </header>
 
     <div class="sidebar-overlay" id="sidebar-overlay" aria-hidden="true"></div>
 
     <aside class="sidebar" id="sidebar" aria-label="Navegação principal">
+      <button class="sidebar__colapsar" id="sidebar-colapsar" type="button" aria-label="Recolher barra lateral" aria-pressed="false" data-tooltip="Recolher barra lateral">
+        <svg class="sidebar__colapsar-icone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 3v18"/></svg>
+      </button>
       <nav class="nav">
         <ul class="nav__lista">
-          <li class="nav__item"><a href="#dashboard" class="ativo">Visão geral</a></li>
-          <li class="nav__item"><a href="#transacoes">Transações</a></li>
-          <li class="nav__item"><a href="#categorias">Categorias</a></li>
-          <li class="nav__item"><a href="#investimentos">Investimentos</a></li>
-          <li class="nav__item"><a href="#assinaturas">Assinaturas</a></li>
-          <li class="nav__item"><a href="#bancos">Bancos</a></li>
-          <li class="nav__item"><a href="#chat">Assistente IA</a></li>
+          <li class="nav__item"><a href="#dashboard" class="ativo"><svg class="nav__icone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/></svg><span class="nav__texto">Visão geral</span></a></li>
+          <li class="nav__item"><a href="#transacoes"><svg class="nav__icone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3 4 7l4 4"/><path d="M4 7h16"/><path d="m16 21 4-4-4-4"/><path d="M20 17H4"/></svg><span class="nav__texto">Transações</span></a></li>
+          <li class="nav__item"><a href="#categorias"><svg class="nav__icone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7.5 7.5h.01"/><path d="M3 3v8.586a2 2 0 0 0 .586 1.414l8 8a2 2 0 0 0 2.828 0l5.586-5.586a2 2 0 0 0 0-2.828l-8-8A2 2 0 0 0 11.586 2H3z"/></svg><span class="nav__texto">Categorias</span></a></li>
+          <li class="nav__item"><a href="#investimentos"><svg class="nav__icone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 7h6v6"/><path d="m22 7-8.5 8.5-5-5L2 17"/></svg><span class="nav__texto">Investimentos</span></a></li>
         </ul>
         <div class="nav__separador"></div>
         <ul class="nav__lista">
-          <li class="nav__item"><a href="login.html" id="nav-sair">Sair</a></li>
+          <li class="nav__item"><a href="login.html" id="nav-sair"><svg class="nav__icone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/></svg><span class="nav__texto">Sair</span></a></li>
         </ul>
       </nav>
+      <div class="sidebar__usuario">
+        <span class="sidebar__avatar" id="sidebar-avatar" aria-hidden="true"></span>
+        <span class="sidebar__nome" id="sidebar-nome">Usuário</span>
+        <button class="sidebar__config" id="sidebar-config" type="button" aria-label="Configurações">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        </button>
+      </div>
     </aside>
 
     <main class="main-content" role="main">
+      <!-- Navegação de contexto em pílulas (visível em todas as abas) -->
+      <nav class="pill-nav" aria-label="Seções financeiras">
+          <a href="#dashboard" class="pill-nav__item ativo">
+            <svg class="pill-nav__icone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" x2="12" y1="20" y2="10"/><line x1="18" x2="18" y1="20" y2="4"/><line x1="6" x2="6" y1="20" y2="16"/></svg>
+            Visão geral
+          </a>
+          <a href="#transacoes" class="pill-nav__item">
+            <svg class="pill-nav__icone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3 4 7l4 4"/><path d="M4 7h16"/><path d="m16 21 4-4-4-4"/><path d="M20 17H4"/></svg>
+            Transações
+          </a>
+          <a href="#parcelamentos" class="pill-nav__item">
+            <svg class="pill-nav__icone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 5c-1.5 0-2.8 1.4-3 2-3.5-1.5-11-.3-11 5 0 1.8 0 3 2 4.5V20h4v-2h3v2h4v-4c1-.5 1.7-1 2-2h2v-4h-2c0-1-.5-1.5-1-2V5z"/><path d="M2 9v1c0 1.1.9 2 2 2h1"/><path d="M16 11h.01"/></svg>
+            Parcelamentos
+          </a>
+          <a href="#categorias" class="pill-nav__item">
+            <svg class="pill-nav__icone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7.5 7.5h.01"/><path d="M3 3v8.586a2 2 0 0 0 .586 1.414l8 8a2 2 0 0 0 2.828 0l5.586-5.586a2 2 0 0 0 0-2.828l-8-8A2 2 0 0 0 11.586 2H3z"/></svg>
+            Categorias
+          </a>
+      </nav>
+
       <!-- 1. VISÃO GERAL -->
       <section class="pagina pagina--ativa" id="dashboard">
-        <h1 class="pagina-titulo">Olá, <span id="nome-usuario">Usuário</span></h1>
-        <div id="card-saldo-total" class="card-saldo-total"></div>
-        <section class="secao">
-          <div class="cards-resumo">
-            <article class="card card--entrada"><p class="card__titulo">Entradas</p><p class="card__valor" id="entradas-valor">—</p></article>
-            <article class="card card--saida"><p class="card__titulo">Saídas</p><p class="card__valor" id="saidas-valor">—</p></article>
-            <article class="card card--pendente"><p class="card__titulo">A pagar</p><p class="card__valor" id="pendentes-valor">—</p></article>
-            <article class="card"><p class="card__titulo">Saldo</p><p class="card__valor" id="saldo-valor">—</p></article>
-          </div>
-        </section>
-        <div class="grid-graficos">
-          <section class="secao secao--grafico"><h2 class="secao__titulo">Entradas × Saídas</h2><canvas id="grafico-donut-resumo" height="220" role="img" aria-label="Gráfico de entradas e saídas"></canvas></section>
-          <section class="secao secao--grafico"><h2 class="secao__titulo">Gastos por categoria</h2><div id="barra-categorias-dashboard"></div></section>
+        <!-- Grid de 2 colunas iguais -->
+        <div class="dashboard-grid">
+          <!-- Card esquerda: insights + KPIs -->
+          <article class="painel painel--insight">
+            <div class="insight__corpo">
+              <h2 class="insight__titulo">Vamos descobrir para onde seu dinheiro está indo?</h2>
+              <p class="insight__mensagem" id="insight-mensagem">—</p>
+            </div>
+            <div class="insight__kpis">
+              <div class="kpi">
+                <span class="kpi__rotulo" id="kpi-gasto-rotulo">Gasto no mês</span>
+                <span class="kpi__valor" id="kpi-gasto">—</span>
+              </div>
+              <div class="kpi">
+                <span class="kpi__rotulo">vs. mês anterior</span>
+                <span class="kpi__valor" id="kpi-comparativo">—</span>
+              </div>
+              <div class="kpi">
+                <span class="kpi__rotulo">Maior gasto</span>
+                <span class="kpi__valor" id="kpi-categoria">—</span>
+              </div>
+            </div>
+            <footer class="insight__rodape">
+              <span class="insight__autor">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M6 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/></svg>
+                <strong>Pierre</strong>
+              </span>
+              <span class="insight__data">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                <span id="insight-data">—</span>
+              </span>
+            </footer>
+          </article>
+
+          <!-- Card direita: gráfico de linha -->
+          <article class="painel painel--grafico">
+            <div class="painel__header">
+              <span class="painel__rotulo">Ritmo de gastos</span>
+              <a href="#transacoes" class="painel__link">ver todas
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg>
+              </a>
+            </div>
+            <div class="painel__resumo">
+              <p class="painel__destaque"><span id="chart-destaque">—</span> <em>abaixo</em></p>
+              <div class="painel__comparativo">
+                <span class="badge-variacao" id="chart-variacao">—</span>
+                <span class="painel__sub" id="chart-anterior">—</span>
+              </div>
+            </div>
+            <div class="painel__chart">
+              <canvas id="grafico-linha-gastos" role="img" aria-label="Evolução de gastos no mês"></canvas>
+            </div>
+            <div class="painel__legenda">
+              <span class="legenda__item legenda__item--atual">Este mês</span>
+              <span class="legenda__item legenda__item--anterior">Mês passado</span>
+            </div>
+          </article>
         </div>
-        <section class="secao">
-          <div class="secao__header"><h2 class="secao__titulo">Últimas transações</h2><a class="btn btn--secundario" href="#transacoes">Ver todas</a></div>
-          <div id="lista-transacoes-recentes"></div>
-        </section>
       </section>
 
       <!-- 2. TRANSAÇÕES -->
       <section class="pagina" id="transacoes">
         <h1 class="pagina-titulo">Transações</h1>
         <div class="filtros" role="group" aria-label="Filtros">
-          <button class="filtro-btn ativo" id="filtro-todos" data-filtro-tipo="todos" type="button">Todas</button>
-          <button class="filtro-btn" data-filtro-tipo="entrada" type="button">Entradas</button>
-          <button class="filtro-btn" data-filtro-tipo="saida" type="button">Saídas</button>
-          <button class="filtro-btn" data-filtro-tipo="pendente" type="button">Pendentes</button>
-          <input type="search" id="filtro-busca" placeholder="Buscar..." aria-label="Buscar transações" />
-          <input type="date" id="filtro-data-inicio" aria-label="Data início" />
-          <input type="date" id="filtro-data-fim" aria-label="Data fim" />
-          <button class="btn btn--secundario" id="btn-limpar-filtros" type="button">Limpar</button>
+          <div class="filtros__tipos">
+            <button class="filtro-btn ativo" id="filtro-todos" data-filtro-tipo="todos" type="button">Todas</button>
+            <button class="filtro-btn" data-filtro-tipo="entrada" type="button">Entradas</button>
+            <button class="filtro-btn" data-filtro-tipo="saida" type="button">Saídas</button>
+            <button class="filtro-btn" data-filtro-tipo="pendente" type="button">Pendentes</button>
+          </div>
+          <div class="filtros__campos">
+            <input type="search" id="filtro-busca" placeholder="Buscar..." aria-label="Buscar transações" />
+            <input type="date" id="filtro-data-inicio" aria-label="Data início" />
+            <input type="date" id="filtro-data-fim" aria-label="Data fim" />
+            <button class="btn btn--secundario" id="btn-limpar-filtros" type="button">Limpar</button>
+          </div>
         </div>
         <p class="resultado-contagem" id="resultado-contagem" aria-live="polite"></p>
         <div id="container-transacoes-lista"></div>
@@ -106,28 +176,13 @@
         <div id="card-investimentos"></div>
       </section>
 
-      <!-- 5. ASSINATURAS -->
-      <section class="pagina" id="assinaturas">
-        <h1 class="pagina-titulo">Assinaturas</h1>
-        <div id="lista-assinaturas" class="grid-assinaturas"></div>
+
+      <!-- 8. PARCELAMENTOS (placeholder) -->
+      <section class="pagina" id="parcelamentos">
+        <h1 class="pagina-titulo">Parcelamentos</h1>
+        <div class="estado-vazio">Em breve: acompanhe aqui suas compras parceladas e o impacto mês a mês.</div>
       </section>
 
-      <!-- 6. BANCOS -->
-      <section class="pagina" id="bancos">
-        <h1 class="pagina-titulo">Bancos conectados</h1>
-        <div id="lista-bancos"></div>
-      </section>
-
-      <!-- 7. CHAT IA -->
-      <section class="pagina" id="chat">
-        <h1 class="pagina-titulo">Assistente IA</h1>
-        <div class="chat-janela" id="chat-janela"></div>
-        <div class="chat-chips" id="chat-chips"></div>
-        <form class="chat-form" id="chat-form">
-          <input type="text" id="chat-input" placeholder="Pergunte algo ao assistente..." aria-label="Mensagem para o assistente" autocomplete="off" />
-          <button class="btn btn--primario" type="submit">Enviar</button>
-        </form>
-      </section>
 
     </main>
 
