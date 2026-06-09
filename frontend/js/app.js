@@ -13,33 +13,19 @@
 // ============================================================
 // As configurações de API e requests estão em api.js
 
-// Dados de demonstração usados enquanto o backend não está pronto
-const DEMO = {
-  resumo: {
-    saldo:     1250.00,
-    entradas:  3500.00,
-    saidas:    1800.00,
-    pendentes:  450.00,
-  },
-  transacoes: [
-    { id: 1, descricao: 'Salário',        tipo: 'entrada',  valor: 3500.00, data: '2025-06-01', categoria: 'salario'      },
-    { id: 2, descricao: 'Aluguel',        tipo: 'saida',    valor: 1200.00, data: '2025-06-02', categoria: 'moradia'      },
-    { id: 3, descricao: 'Supermercado',   tipo: 'saida',    valor:  320.50, data: '2025-06-03', categoria: 'alimentacao'  },
-    { id: 4, descricao: 'Freelance',      tipo: 'entrada',  valor:  800.00, data: '2025-06-05', categoria: 'renda_extra'  },
-    { id: 5, descricao: 'Conta de luz',   tipo: 'pendente', valor:  180.00, data: '2025-06-10', categoria: 'utilidades'   },
-    { id: 6, descricao: 'Plano de Saúde', tipo: 'saida',    valor:  280.00, data: '2025-06-04', categoria: 'saude'        },
-    { id: 7, descricao: 'Curso Online',   tipo: 'saida',    valor:   99.90, data: '2025-06-06', categoria: 'educacao'     },
-  ],
-};
-
 // Estado global da listagem de transações
 let todasTransacoes = [];
+
+// Categorias carregadas do backend (preenchidas em loadCategorias)
+let CATEGORIAS = [];
+let MAPA_LABEL_CATEGORIA = {};
+let MAPA_EMOJI_CATEGORIA = {};
 let estadoFiltros = { tipo: 'todos', busca: '', dataInicio: '', dataFim: '' };
 
 // ============================================================
 // INICIALIZAÇÃO
 // ============================================================
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   // Redireciona para a tela de login caso não esteja autenticado
   if (!localStorage.getItem('access_token')) {
     window.location.href = window.location.protocol === 'file:' ? 'login.html' : '/login';
@@ -54,6 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
   inicializarFormTransacao();
   inicializarSecaoTransacoes();
   inicializarLogout();
+  await loadCategorias();
   carregarDashboard();
   carregarTodasTransacoes();
 });
@@ -105,56 +92,42 @@ async function carregarDashboard() {
 // --- Resumo financeiro ---
 async function carregarResumo() {
   mostrarSpinner(true);
-
   try {
     const dados = await TransacoesAPI.resumo();
     renderizarResumo(dados);
-
   } catch (erro) {
-    console.warn('API indisponível — usando dados de demonstração:', erro.message);
-    renderizarResumo(DEMO.resumo);
+    console.error('Erro ao carregar dashboard:', erro.message);
+    mostrarToast('Não foi possível carregar o resumo financeiro.', 'erro');
   } finally {
     mostrarSpinner(false);
   }
 }
 
-const ROTULOS_CATEGORIA = {
-  salario: 'Salário', renda_extra: 'Renda Extra', moradia: 'Moradia',
-  alimentacao: 'Alimentação', transporte: 'Transporte', saude: 'Saúde',
-  educacao: 'Educação', lazer: 'Lazer', utilidades: 'Utilidades', outros: 'Outros',
-};
-
-const EMOJI_CATEGORIA = {
-  salario: '💰', renda_extra: '💵', moradia: '🏠', alimentacao: '🍽️',
-  transporte: '🚗', saude: '🏥', educacao: '📚', lazer: '🎮',
-  utilidades: '💡', outros: '📦',
-};
-
-function renderizarResumo({ saldo, entradas, saidas, pendentes }) {
+function renderizarResumo(dados) {
   const txt = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
-  const transacoes = todasTransacoes.length ? todasTransacoes : DEMO.transacoes;
+  const resumo = dados.resumo || {};
+  const comparativo = dados.comparativo || {};
+  const serie = dados.serieDiaria || {};
+  const categorias = dados.categorias || [];
+
   const nome = (localStorage.getItem('user_name') || 'Você').split(' ')[0];
-  const gasto = saidas ?? 0;
+  const gasto = resumo.saidas ?? 0;
+  const pendentes = resumo.pendentes ?? 0;
   const mes = new Date().toLocaleDateString('pt-BR', { month: 'long' });
 
-  // Comparativo com mês anterior (estimativa enquanto API não fornece histórico)
-  const gastoAnterior = gasto * 1.18 || 0;
-  const difPct = gastoAnterior ? ((gasto - gastoAnterior) / gastoAnterior) * 100 : 0;
+  const difPct = comparativo.difPct ?? 0;
+  const gastoAnterior = comparativo.gastoAnterior ?? 0;
   const diferenca = Math.abs(gastoAnterior - gasto);
   const abaixo = gasto <= gastoAnterior;
 
-  // Categoria principal (maior soma de saídas)
-  const porCategoria = {};
-  transacoes
-    .filter(t => t.tipo === 'saida' || t.tipo === 'pendente')
-    .forEach(t => { porCategoria[t.categoria] = (porCategoria[t.categoria] || 0) + t.valor; });
-  const topCat = Object.entries(porCategoria).sort((a, b) => b[1] - a[1])[0];
-  const categoriaPrincipal = topCat ? (ROTULOS_CATEGORIA[topCat[0]] || topCat[0]) : '—';
-  const categoriaEmoji = topCat ? (EMOJI_CATEGORIA[topCat[0]] || '📦') : '';
+  // Categoria principal (maior gasto do mês)
+  const topCat = categorias[0];
+  const categoriaPrincipal = topCat ? labelCategoria(topCat.categoria) : '—';
+  const categoriaEmoji = topCat ? emojiCategoria(topCat.categoria) : '';
 
-  // --- Card insight ---
+  // Card insight
   txt('insight-mensagem',
-    `${nome}, seu gasto quase não mudou, mas as parcelas ainda pesam ${formatarBRL(pendentes ?? 0)} este mês.`);
+    `${nome}, seu gasto do mês está em ${formatarBRL(gasto)}, com ${formatarBRL(pendentes)} ainda pendente.`);
   txt('kpi-gasto-rotulo', `Gasto em ${mes}`);
   txt('kpi-gasto', formatarBRL(gasto));
   txt('kpi-comparativo', `${difPct <= 0 ? '↘' : '↗'} ${Math.abs(difPct).toFixed(0)}%`);
@@ -164,7 +137,7 @@ function renderizarResumo({ saldo, entradas, saidas, pendentes }) {
   const elComp = document.getElementById('kpi-comparativo');
   if (elComp) elComp.classList.toggle('kpi__valor--positivo', difPct <= 0);
 
-  // --- Card gráfico ---
+  // Card gráfico
   txt('chart-destaque', formatarBRL(diferenca));
   txt('chart-variacao', `${difPct <= 0 ? '▾' : '▴'} ${Math.abs(difPct).toFixed(1)}%`);
   txt('chart-anterior', `vs ${formatarBRL(gastoAnterior)} mês anterior`);
@@ -175,41 +148,10 @@ function renderizarResumo({ saldo, entradas, saidas, pendentes }) {
   const elDestaqueEm = document.querySelector('.painel__destaque em');
   if (elDestaqueEm) elDestaqueEm.textContent = abaixo ? 'abaixo' : 'acima';
 
-  const serie = construirSerieGastos(transacoes, gasto, gastoAnterior);
-  criarLinhaComparativa('grafico-linha-gastos', serie.labels, serie.atual, serie.anterior, serie.diaAtual);
-}
-
-// Constrói séries diárias cumulativas (este mês × mês passado) para o gráfico de linha
-function construirSerieGastos(transacoes, totalAtual, totalAnterior) {
-  const hoje = new Date();
-  const dias = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0).getDate(); // dias no mês
-  const diaAtual = Math.min(hoje.getDate(), dias);
+  // Série real do backend
+  const dias = Math.max((serie.atual || []).length, (serie.anterior || []).length) || 30;
   const labels = Array.from({ length: dias }, (_, i) => String(i + 1));
-
-  // Acumula saídas por dia do mês a partir das transações
-  const porDia = new Array(dias).fill(0);
-  transacoes
-    .filter(t => t.tipo === 'saida' || t.tipo === 'pendente')
-    .forEach(t => {
-      const dia = new Date(t.data).getDate();
-      if (dia >= 1 && dia <= dias) porDia[dia - 1] += t.valor;
-    });
-
-  // "Este mês": cumulativo só até hoje (resto null = linha curta com ponto na ponta)
-  let acc = 0;
-  const temDados = porDia.some(v => v > 0);
-  const atual = labels.map((_, i) => {
-    if (i + 1 > diaAtual) return null;
-    acc += temDados ? porDia[i] : totalAtual / diaAtual;
-    return Math.round(acc);
-  });
-
-  // "Mês passado": curva cheia que termina no total anterior (sobe em degraus)
-  const escala = totalAtual ? totalAnterior / totalAtual : 1.18;
-  const totAnt = Math.round((temDados ? acc : totalAtual) * escala);
-  const anterior = labels.map((_, i) => Math.round(totAnt * Math.pow((i + 1) / dias, 0.7)));
-
-  return { labels, atual, anterior, diaAtual };
+  criarLinhaComparativa('grafico-linha-gastos', labels, serie.atual || [], serie.anterior || [], serie.diaCorrente || dias);
 }
 
 // Formata data como "09 de jun. de 2026"
@@ -217,21 +159,39 @@ function formatarDataExtenso(data) {
   return data.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' });
 }
 
-// --- Transações recentes ---
-async function carregarTransacoesRecentes() {
-  try {
-    const dados = await TransacoesAPI.listar();
-    // A API pode retornar { results: [...] } (paginado) ou direto um array
-    const lista = Array.isArray(dados) ? dados : (dados.results ?? []);
-    // Para transações recentes, consideramos as primeiras 5
-    renderizarTransacoesRecentes(lista.slice(0, 5));
+function labelCategoria(cat) {
+  return MAPA_LABEL_CATEGORIA[cat] ?? cat ?? '—';
+}
 
+function emojiCategoria(cat) {
+  return MAPA_EMOJI_CATEGORIA[cat] ?? '📦';
+}
+
+async function loadCategorias() {
+  try {
+    const resposta = await CategoriasAPI.listar();
+    CATEGORIAS = Array.isArray(resposta) ? resposta : (resposta?.results ?? []);
   } catch (erro) {
-    console.warn('Transações indisponíveis — usando dados de demonstração:', erro.message);
-    renderizarTransacoesRecentes(DEMO.transacoes);
+    console.error('Erro ao carregar categorias:', erro.message);
+    mostrarToast('Não foi possível carregar as categorias.', 'erro');
+    CATEGORIAS = [];
+  }
+
+  MAPA_LABEL_CATEGORIA = {};
+  MAPA_EMOJI_CATEGORIA = {};
+  CATEGORIAS.forEach((c) => {
+    MAPA_LABEL_CATEGORIA[c.slug] = c.name;
+    MAPA_EMOJI_CATEGORIA[c.slug] = c.icon || '📦';
+  });
+
+  const select = document.getElementById('transacao-categoria');
+  if (select) {
+    select.innerHTML = '<option value="">Selecione...</option>' +
+      CATEGORIAS.map((c) => `<option value="${c.slug}">${c.name}</option>`).join('');
   }
 }
 
+// --- Transações recentes ---
 function renderizarTransacoesRecentes(lista) {
   const container = document.getElementById('lista-transacoes-recentes');
   if (!container) return;
@@ -506,37 +466,13 @@ async function salvarTransacao() {
     carregarTodasTransacoes();
 
   } catch (erro) {
-    console.warn('API indisponível — modo demonstração:', erro.message);
-    // Salva localmente nos dados demo
-    if (id) {
-       const idx = DEMO.transacoes.findIndex(t => String(t.id) === String(id));
-       if(idx > -1) DEMO.transacoes[idx] = { id, ...payload };
-    } else {
-       DEMO.transacoes.unshift({ id: Date.now(), ...payload });
-    }
-    atualizarResumoDemo(payload);
-    mostrarToast('Transação salva! (modo demonstração)', 'sucesso');
-    fecharModal();
-    renderizarTransacoesRecentes(DEMO.transacoes.slice(0, 5));
-    renderizarResumo(DEMO.resumo);
-    
-    // Atualiza listagens em memória também
-    todasTransacoes = [...DEMO.transacoes];
-    aplicarFiltros();
-    renderizarContasPagar();
+    console.error('Erro ao salvar transação:', erro.message);
+    mostrarToast('Não foi possível salvar a transação. Tente novamente.', 'erro');
   } finally {
     btn.disabled = false;
     btn.textContent = 'Salvar transação';
     mostrarSpinner(false);
   }
-}
-
-/** Atualiza o resumo demo ao salvar sem backend */
-function atualizarResumoDemo({ tipo, valor }) {
-  if (tipo === 'entrada')  DEMO.resumo.entradas  += valor;
-  if (tipo === 'saida')    DEMO.resumo.saidas    += valor;
-  if (tipo === 'pendente') DEMO.resumo.pendentes += valor;
-  DEMO.resumo.saldo = DEMO.resumo.entradas - DEMO.resumo.saidas;
 }
 
 // --- Helpers de validação ---
@@ -607,15 +543,15 @@ function inicializarSecaoTransacoes() {
   });
 }
 
-/** Busca todas as transações da API (com fallback demo) */
+/** Busca todas as transações da API */
 async function carregarTodasTransacoes() {
   try {
     const dados = await TransacoesAPI.listar();
     todasTransacoes = Array.isArray(dados) ? dados : (dados.results ?? []);
-
   } catch (erro) {
-    console.warn('Transações: usando dados de demonstração.', erro.message);
-    todasTransacoes = [...DEMO.transacoes];
+    console.error('Erro ao carregar transações:', erro.message);
+    mostrarToast('Não foi possível carregar as transações.', 'erro');
+    todasTransacoes = [];
   }
 
   aplicarFiltros();
@@ -688,7 +624,7 @@ function renderizarTabelaTransacoes(lista) {
 // TELA CATEGORIAS
 // ============================================================
 function renderizarPaginaCategorias() {
-  const fonte = todasTransacoes.length ? todasTransacoes : DEMO.transacoes;
+  const fonte = todasTransacoes;
   renderizarBarraCategorias('barra-categorias-pagina', fonte);
   const dados = agregarPorCategoria(fonte);
   criarDonut('grafico-donut-categorias', dados.map(d => labelCategoria(d.categoria)), dados.map(d => d.total));
@@ -703,7 +639,7 @@ function editarTransacao(id) {
   if (transacao) abrirModal(transacao);
 }
 
-/** Exclui a transação (API ou demo) */
+/** Exclui a transação via API */
 async function excluirTransacao(id) {
   const transacao = todasTransacoes.find(t => String(t.id) === String(id));
   if (!transacao) return;
@@ -712,22 +648,18 @@ async function excluirTransacao(id) {
   if (!confirmar) return;
 
   mostrarSpinner(true);
-
   try {
     await TransacoesAPI.excluir(id);
-
-    mostrarToast('Transação excluída.', 'sucesso');
-
-  } catch (erro) {
-    console.warn('API indisponível — excluindo localmente.', erro.message);
-    mostrarToast('Transação removida! (modo demonstração)', 'sucesso');
-  } finally {
-    // Remove da lista em memória e re-renderiza
     todasTransacoes = todasTransacoes.filter(t => String(t.id) !== String(id));
-    DEMO.transacoes = DEMO.transacoes.filter(t => String(t.id) !== String(id));
     aplicarFiltros();
     renderizarTransacoesRecentes(todasTransacoes.slice(0, 5));
     renderizarContasPagar();
+    carregarDashboard();
+    mostrarToast('Transação excluída.', 'sucesso');
+  } catch (erro) {
+    console.error('Erro ao excluir transação:', erro.message);
+    mostrarToast('Não foi possível excluir a transação.', 'erro');
+  } finally {
     mostrarSpinner(false);
   }
 }
@@ -806,53 +738,23 @@ async function pagarConta(id) {
   if (!confirmar) return;
 
   mostrarSpinner(true);
-
-  // Atualiza payload para tipo 'saida' e usa a data de hoje para o pagamento real
   const payloadAtualizado = {
     ...transacao,
     tipo: 'saida',
-    data: new Date().toISOString().split('T')[0]
+    data: new Date().toISOString().split('T')[0],
   };
 
   try {
     await TransacoesAPI.atualizar(id, payloadAtualizado);
+    await carregarTodasTransacoes();
+    carregarDashboard();
     mostrarToast('Conta marcada como paga!', 'sucesso');
   } catch (erro) {
-    console.warn('API indisponível — atualizando localmente (demo).', erro.message);
-    // Demo fallback: substitui no mock
-    const idxDemo = DEMO.transacoes.findIndex(t => String(t.id) === String(id));
-    if (idxDemo > -1) DEMO.transacoes[idxDemo] = payloadAtualizado;
-    mostrarToast('Conta paga! (modo demonstração)', 'sucesso');
+    console.error('Erro ao pagar conta:', erro.message);
+    mostrarToast('Não foi possível marcar a conta como paga.', 'erro');
   } finally {
-    // Atualiza listagem global
-    const idxReal = todasTransacoes.findIndex(t => String(t.id) === String(id));
-    if (idxReal > -1) todasTransacoes[idxReal] = payloadAtualizado;
-    
-    carregarDashboard();
-    aplicarFiltros();
-    renderizarContasPagar();
     mostrarSpinner(false);
   }
-}
-
-// Mapa de categorias para labels amigáveis
-const LABELS_CATEGORIA = {
-  salario:      'Salário',
-  renda_extra:  'Renda Extra',
-  investimento: 'Investimento',
-  moradia:      'Moradia',
-  alimentacao:  'Alimentação',
-  transporte:   'Transporte',
-  saude:        'Saúde',
-  educacao:     'Educação',
-  lazer:        'Lazer',
-  vestuario:    'Vestuário',
-  utilidades:   'Utilidades',
-  outros:       'Outros',
-};
-
-function labelCategoria(cat) {
-  return LABELS_CATEGORIA[cat] ?? cat ?? '—';
 }
 
 // ============================================================
@@ -910,30 +812,93 @@ function renderizarBarraCategorias(containerId, transacoes) {
 }
 
 // ============================================================
-// TELA MOCK — Investimentos
+// TELA INVESTIMENTOS
 // ============================================================
 async function renderizarPaginaInvestimentos() {
   const el = document.getElementById('card-investimentos');
   if (!el) return;
-  const dados = await InvestimentosAPI.listar();
+
+  let dados = [];
+  try {
+    dados = await InvestimentosAPI.listar();
+  } catch (erro) {
+    console.error('Erro ao carregar investimentos:', erro.message);
+    mostrarToast('Não foi possível carregar os investimentos.', 'erro');
+    el.innerHTML = criarEstadoVazio('Não foi possível carregar os investimentos.');
+    return;
+  }
+
   const total = dados.reduce((s, d) => s + d.valor, 0);
+  const linhas = dados.map(d => `
+    <div class="investimento-row" data-id="${d.id}">
+      <span>${d.classe}</span>
+      <span>${formatarBRL(d.valor)}
+        <span class="${d.variacaoPct >= 0 ? 'variacao--alta' : 'variacao--baixa'}">
+          ${d.variacaoPct >= 0 ? '↑' : '↓'} ${Math.abs(d.variacaoPct)}%
+        </span>
+        <button class="btn-acao btn-acao--excluir" onclick="excluirInvestimento('${d.id}')" aria-label="Excluir">🗑️</button>
+      </span>
+    </div>`).join('');
+
   el.innerHTML = `
     <div class="card-saldo-total">
-      <p class="card__titulo">Total investido • ${dados.length} ativos</p>
+      <p class="card__titulo">Total investido • ${dados.length} ativo(s)</p>
       <p class="card-saldo-total__valor">${formatarBRL(total)}</p>
     </div>
+    <form id="form-investimento" class="form-investimento">
+      <input type="text" id="inv-classe" placeholder="Classe (ex.: Renda fixa)" required />
+      <input type="number" id="inv-aplicado" placeholder="Valor aplicado" min="0.01" step="0.01" required />
+      <input type="number" id="inv-atual" placeholder="Valor atual" min="0" step="0.01" required />
+      <button type="submit" class="btn btn--primario">Adicionar</button>
+    </form>
     <div class="grid-graficos">
       <section class="secao secao--grafico"><canvas id="grafico-donut-invest" height="240" role="img" aria-label="Distribuição dos investimentos"></canvas></section>
-      <section class="secao">${dados.map(d => `
-        <div class="investimento-row">
-          <span>${d.classe}</span>
-          <span>${formatarBRL(d.valor)}
-            <span class="${d.variacaoPct >= 0 ? 'variacao--alta' : 'variacao--baixa'}">
-              ${d.variacaoPct >= 0 ? '↑' : '↓'} ${Math.abs(d.variacaoPct)}%
-            </span>
-          </span>
-        </div>`).join('')}</section>
+      <section class="secao">${linhas || criarEstadoVazio('Nenhum investimento cadastrado ainda.')}</section>
     </div>`;
-  criarDonut('grafico-donut-invest', dados.map(d => d.classe), dados.map(d => d.valor));
+
+  if (dados.length) {
+    criarDonut('grafico-donut-invest', dados.map(d => d.classe), dados.map(d => d.valor));
+  }
+
+  document.getElementById('form-investimento')?.addEventListener('submit', salvarInvestimento);
+}
+
+async function salvarInvestimento(e) {
+  e.preventDefault();
+  const classe = document.getElementById('inv-classe').value.trim();
+  const valorAplicado = parseFloat(document.getElementById('inv-aplicado').value);
+  const valorAtual = parseFloat(document.getElementById('inv-atual').value);
+
+  if (!classe || !(valorAplicado > 0) || !(valorAtual >= 0)) {
+    mostrarToast('Preencha classe, valor aplicado (> 0) e valor atual.', 'erro');
+    return;
+  }
+
+  mostrarSpinner(true);
+  try {
+    await InvestimentosAPI.criar({ classe, valorAplicado, valorAtual });
+    mostrarToast('Investimento adicionado!', 'sucesso');
+    renderizarPaginaInvestimentos();
+  } catch (erro) {
+    console.error('Erro ao salvar investimento:', erro.message);
+    mostrarToast('Não foi possível salvar o investimento.', 'erro');
+  } finally {
+    mostrarSpinner(false);
+  }
+}
+
+async function excluirInvestimento(id) {
+  if (!window.confirm('Excluir este investimento?')) return;
+  mostrarSpinner(true);
+  try {
+    await InvestimentosAPI.excluir(id);
+    mostrarToast('Investimento excluído.', 'sucesso');
+    renderizarPaginaInvestimentos();
+  } catch (erro) {
+    console.error('Erro ao excluir investimento:', erro.message);
+    mostrarToast('Não foi possível excluir o investimento.', 'erro');
+  } finally {
+    mostrarSpinner(false);
+  }
 }
 

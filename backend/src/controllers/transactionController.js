@@ -186,32 +186,86 @@ export const listarTransacoes = async (req, res) => {
   }
 };
 
+function intervaloMes(ano, mes) {
+  // mes: 0-11
+  return { inicio: new Date(ano, mes, 1), fim: new Date(ano, mes + 1, 1) };
+}
+
+function acumularPorDia(transacoes, diasNoMes) {
+  const porDia = new Array(diasNoMes).fill(0);
+  transacoes.forEach((t) => {
+    const dia = new Date(t.date).getDate();
+    if (dia >= 1 && dia <= diasNoMes) porDia[dia - 1] += t.amount;
+  });
+  let acc = 0;
+  return porDia.map((v) => {
+    acc += v;
+    return Math.round(acc);
+  });
+}
+
 export const resumirDashboard = async (req, res) => {
   try {
-    const totais = await Transaction.aggregate([
-      { $match: { user: req.user._id } },
-      {
-        $group: {
-          _id: '$type',
-          total: { $sum: '$amount' },
-        },
-      },
-    ]);
+    const userId = req.user._id;
+    const hoje = new Date();
+    const ano = hoje.getFullYear();
+    const mes = hoje.getMonth();
 
-    const resumo = totais.reduce((acc, item) => {
+    const atual = intervaloMes(ano, mes);
+    const anterior = intervaloMes(ano, mes - 1);
+    const diasAtual = new Date(ano, mes + 1, 0).getDate();
+    const diasAnterior = new Date(ano, mes, 0).getDate();
+    const diaCorrente = Math.min(hoje.getDate(), diasAtual);
+
+    // Resumo do mês atual por tipo
+    const totais = await Transaction.aggregate([
+      { $match: { user: userId, date: { $gte: atual.inicio, $lt: atual.fim } } },
+      { $group: { _id: '$type', total: { $sum: '$amount' } } },
+    ]);
+    const resumoMap = totais.reduce((acc, item) => {
       acc[item._id] = item.total;
       return acc;
     }, {});
+    const entradas = resumoMap.income || 0;
+    const saidas = resumoMap.expense || 0;
+    const pendentes = resumoMap.pending || 0;
 
-    const entradas = resumo.income || 0;
-    const saidas = resumo.expense || 0;
-    const pendentes = resumo.pending || 0;
+    // Gasto (expense) do mês anterior para comparativo
+    const gastoAnteriorAgg = await Transaction.aggregate([
+      { $match: { user: userId, type: 'expense', date: { $gte: anterior.inicio, $lt: anterior.fim } } },
+      { $group: { _id: null, total: { $sum: '$amount' } } },
+    ]);
+    const gastoAtual = saidas;
+    const gastoAnterior = gastoAnteriorAgg[0]?.total || 0;
+    const difPct = gastoAnterior > 0 ? ((gastoAtual - gastoAnterior) / gastoAnterior) * 100 : 0;
+
+    // Séries diárias (expense + pending) dos dois meses
+    const tipoGasto = { $in: ['expense', 'pending'] };
+    const [txAtual, txAnterior] = await Promise.all([
+      Transaction.find({ user: userId, type: tipoGasto, date: { $gte: atual.inicio, $lt: atual.fim } }, 'amount date'),
+      Transaction.find({ user: userId, type: tipoGasto, date: { $gte: anterior.inicio, $lt: anterior.fim } }, 'amount date'),
+    ]);
+    const serieAtualFull = acumularPorDia(txAtual, diasAtual);
+    const serieAtual = serieAtualFull.map((v, i) => (i + 1 <= diaCorrente ? v : null));
+    const serieAnterior = acumularPorDia(txAnterior, diasAnterior);
+
+    // Categorias (expense) do mês atual, desc
+    const categoriasAgg = await Transaction.aggregate([
+      { $match: { user: userId, type: 'expense', date: { $gte: atual.inicio, $lt: atual.fim } } },
+      { $group: { _id: '$category', total: { $sum: '$amount' } } },
+      { $sort: { total: -1 } },
+    ]);
+    const categorias = categoriasAgg.map((c) => ({ categoria: c._id || 'outros', total: c.total }));
 
     return res.status(200).json({
-      saldo: entradas - saidas,
-      entradas,
-      saidas,
-      pendentes,
+      resumo: { saldo: entradas - saidas, entradas, saidas, pendentes },
+      comparativo: {
+        gastoAtual,
+        gastoAnterior,
+        difPct: Number(difPct.toFixed(2)),
+      },
+      serieDiaria: { atual: serieAtual, anterior: serieAnterior, diaCorrente },
+      categorias,
     });
   } catch (error) {
     return res.status(500).json({

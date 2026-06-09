@@ -12,7 +12,7 @@ const router = express.Router();
 
 router.use(protect);
 
-router.get('/dashboard/summary', resumirDashboard);
+router.get('/dashboard', resumirDashboard);
 router.get('/', listarTransacoes);
 router.post('/', criarTransacao);
 router.put('/:id', editarTransacao);

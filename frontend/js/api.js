@@ -131,14 +131,30 @@ const TransacoesAPI = {
     method: 'DELETE'
   }),
 
-  resumo: () => request('/transactions/dashboard/summary')
+  resumo: () => request('/transactions/dashboard')
 };
 
 // ============================================================
-// STUBS MOCK — backend substitui o corpo por fetch real,
-// mantendo o mesmo retorno (ver contratos em mock-data.js).
+// SERVICOS DE CATEGORIAS
+// ============================================================
+const CategoriasAPI = {
+  listar: () => request('/categories'),
+};
+
+// ============================================================
+// SERVICOS DE INVESTIMENTOS
+// NOTA: o backend tambem expoe PUT /investments/:id (editar), mas a UI
+// atual so cria/exclui; o metodo editar fica deferido para um proximo passo.
 // ============================================================
 const InvestimentosAPI = {
-  // Backend: return await request('/investments');
-  listar: async () => MOCK.investimentos,
+  listar: () => request('/investments'),
+
+  criar: (dados) => request('/investments', {
+    method: 'POST',
+    body: JSON.stringify(dados),
+  }),
+
+  excluir: (id) => request(`/investments/${id}`, {
+    method: 'DELETE',
+  }),
 };
