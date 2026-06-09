@@ -344,7 +344,10 @@ function abrirModal(transacao = null) {
     titulo.textContent = 'Editar Transação';
     document.getElementById('transacao-id').value          = transacao.id ?? '';
     document.getElementById('transacao-descricao').value   = transacao.descricao ?? '';
-    document.getElementById('transacao-valor').value       = transacao.valor ?? '';
+    const totalParcelas = transacao.parcelas ?? 1;
+    document.getElementById('transacao-valor').value = (transacao.valor ?? 0) * totalParcelas;
+    const inpParc = document.getElementById('transacao-parcelas');
+    if (inpParc) inpParc.value = totalParcelas;
     document.getElementById('transacao-data').value        = transacao.data ?? '';
     document.getElementById('transacao-categoria').value   = transacao.categoria ?? '';
     document.getElementById('transacao-observacao').value  = transacao.observacao ?? '';
@@ -384,6 +387,17 @@ function inicializarFormTransacao() {
     btn.addEventListener('click', () => selecionarTipo(btn.dataset.tipo));
   });
 
+  // --- Feedback dinâmico de parcelas ---
+  const atualizarFeedbackParcelas = () => {
+    const total = parseFloat(document.getElementById('transacao-valor').value) || 0;
+    const n = parseInt(document.getElementById('transacao-parcelas')?.value ?? '1', 10) || 1;
+    const fb = document.getElementById('parcelas-feedback');
+    if (!fb) return;
+    fb.textContent = (n > 1 && total > 0) ? `${n}x de ${formatarBRL(total / n)}` : '';
+  };
+  document.getElementById('transacao-valor')?.addEventListener('input', atualizarFeedbackParcelas);
+  document.getElementById('transacao-parcelas')?.addEventListener('input', atualizarFeedbackParcelas);
+
   // --- Submit ---
   document.getElementById('form-transacao')?.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -399,9 +413,9 @@ function selecionarTipo(tipo) {
   });
   document.getElementById('transacao-tipo').value = tipo;
 
-  // Mostra parcelas somente para saídas
+  // Mostra parcelas para entrada e saída; oculta para pendente
   const grupoParcelas = document.getElementById('grupo-parcelas');
-  if (grupoParcelas) grupoParcelas.hidden = tipo !== 'saida';
+  if (grupoParcelas) grupoParcelas.hidden = (tipo === 'pendente');
 }
 
 /** Valida os campos obrigatórios */
@@ -442,13 +456,18 @@ async function salvarTransacao() {
   mostrarSpinner(true);
 
   const id = document.getElementById('transacao-id').value;
+  const totalDigitado = parseFloat(document.getElementById('transacao-valor').value);
+  const nParcelas = parseInt(document.getElementById('transacao-parcelas')?.value ?? '1', 10) || 1;
+  const tipoSel = document.getElementById('transacao-tipo').value;
+  const valorParcela = (tipoSel !== 'pendente' && nParcelas > 1) ? (totalDigitado / nParcelas) : totalDigitado;
+
   const payload = {
-    tipo:       document.getElementById('transacao-tipo').value,
+    tipo:       tipoSel,
     descricao:  document.getElementById('transacao-descricao').value.trim(),
-    valor:      parseFloat(document.getElementById('transacao-valor').value),
+    valor:      valorParcela,
     data:       document.getElementById('transacao-data').value,
     categoria:  document.getElementById('transacao-categoria').value,
-    parcelas:   parseInt(document.getElementById('transacao-parcelas')?.value ?? '1', 10),
+    parcelas:   (tipoSel !== 'pendente') ? nParcelas : 1,
     observacao: document.getElementById('transacao-observacao').value.trim(),
   };
 
