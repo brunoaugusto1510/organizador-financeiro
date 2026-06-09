@@ -192,17 +192,6 @@ async function loadCategorias() {
 }
 
 // --- Transações recentes ---
-async function carregarTransacoesRecentes() {
-  try {
-    const dados = await TransacoesAPI.listar();
-    const lista = Array.isArray(dados) ? dados : (dados.results ?? []);
-    renderizarTransacoesRecentes(lista.slice(0, 5));
-  } catch (erro) {
-    console.error('Erro ao carregar transações recentes:', erro.message);
-    renderizarTransacoesRecentes([]);
-  }
-}
-
 function renderizarTransacoesRecentes(lista) {
   const container = document.getElementById('lista-transacoes-recentes');
   if (!container) return;

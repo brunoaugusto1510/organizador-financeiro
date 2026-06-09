@@ -143,6 +143,8 @@ const CategoriasAPI = {
 
 // ============================================================
 // SERVICOS DE INVESTIMENTOS
+// NOTA: o backend tambem expoe PUT /investments/:id (editar), mas a UI
+// atual so cria/exclui; o metodo editar fica deferido para um proximo passo.
 // ============================================================
 const InvestimentosAPI = {
   listar: () => request('/investments'),
