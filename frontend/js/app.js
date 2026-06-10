@@ -626,7 +626,8 @@ function renderizarPaginaCategorias() {
   const fonte = todasTransacoes;
   renderizarBarraCategorias('barra-categorias-pagina', fonte);
   const dados = agregarPorCategoria(fonte);
-  criarDonut('grafico-donut-categorias', dados.map(d => labelCategoria(d.categoria)), dados.map(d => d.total));
+  const cores = dados.map((_, i) => CORES_CATEGORIAS[i % CORES_CATEGORIAS.length]);
+  criarDonut('grafico-donut-categorias', dados.map(d => labelCategoria(d.categoria)), dados.map(d => d.total), cores);
   const lista = document.getElementById('lista-categorias');
   if (lista) lista.innerHTML = dados.map(d => `
     <div class="investimento-row"><span>${labelCategoria(d.categoria)}</span><strong>${formatarBRL(d.total)}</strong></div>`).join('') || criarEstadoVazio('Sem gastos no período.');
@@ -798,13 +799,16 @@ function agregarPorCategoria(transacoes) {
     .sort((a, b) => b.total - a.total);
 }
 
+/** Paleta de cores das categorias — compartilhada entre a barra e o donut. */
+const CORES_CATEGORIAS = ['#f472b6','#a78bfa','#fbbf24','#60a5fa','#34d399','#fb923c'];
+
 /** Renderiza a barra multicolor de categorias num container. */
 function renderizarBarraCategorias(containerId, transacoes) {
   const el = document.getElementById(containerId);
   if (!el) return;
   const dados = agregarPorCategoria(transacoes);
   const total = dados.reduce((s, d) => s + d.total, 0) || 1;
-  const cores = ['#f472b6','#a78bfa','#fbbf24','#60a5fa','#34d399','#fb923c'];
+  const cores = CORES_CATEGORIAS;
   const segs = dados.map((d, i) => `<div class="barra-categorias__seg" style="width:${(d.total/total*100).toFixed(1)}%;background:${cores[i%cores.length]}"></div>`).join('');
   const legenda = dados.map((d, i) => `<span class="barra-categorias__item"><span class="barra-categorias__dot" style="background:${cores[i%cores.length]}"></span>${labelCategoria(d.categoria)} — ${formatarBRL(d.total)}</span>`).join('');
   el.innerHTML = `<div class="barra-categorias__trilha">${segs}</div><div class="barra-categorias__legenda">${legenda}</div>`;
