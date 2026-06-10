@@ -569,7 +569,14 @@
 .cat-header__total { display: flex; flex-direction: column; gap: 4px; }
 .cat-header__total strong { font-size: 2rem; font-weight: 700; }
 .cat-header__total span { color: #a1a1aa; font-size: 0.9rem; }
-.cat-header__donut { width: 130px; height: 130px; }
+.cat-header__grafico { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+.cat-header__grafico--vazio { color: #71717a; font-size: 0.9rem; }
+.cat-header__anel { width: 150px; height: 150px; flex-shrink: 0; }
+.donut-legenda { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; min-width: 160px; }
+.donut-legenda__item { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; }
+.donut-legenda__cor { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.donut-legenda__rotulo { color: #e4e4e7; }
+.donut-legenda__pct { color: #a1a1aa; margin-left: auto; }
 
 .cat-mes-nav { display: flex; align-items: center; gap: 16px; }
 .cat-mes-nav__btn {
