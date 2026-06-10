@@ -16,7 +16,7 @@ function validarTipo(type) {
 }
 
 function montarDadosTransacao(body) {
-  const { title, type, amount, category, date, description, parcelas, parcelasPagas } = body;
+  const { title, type, amount, category, date, description, parcelas, parcelasPagas, oculto } = body;
 
   return {
     title,
@@ -27,6 +27,7 @@ function montarDadosTransacao(body) {
     description,
     parcelas,
     parcelasPagas,
+    oculto,
   };
 }
 

@@ -37,7 +37,16 @@ const GRUPOS = {
   renda:       { label: 'Renda',             icon: '💵', cor: '#10b981', ordem: 11 },
 };
 
-let estadoFiltros = { tipo: 'todos', busca: '', dataInicio: '', dataFim: '' };
+let estadoFiltros = {
+  periodo: 'este-mes',      // 'este-mes' | 'mes-passado' | 'todos'
+  tipo: 'todos',            // 'todos' | 'entrada' | 'saida' | 'pendente'
+  ordenacao: 'data-desc',   // 'data-desc' | 'data-asc' | 'valor-desc' | 'valor-asc'
+  categoria: 'todas',       // 'todas' | <slug>
+  busca: '',
+  mostrarOcultos: false,
+  pagina: 1,
+  porPagina: 10,
+};
 
 // ============================================================
 // INICIALIZAÇÃO
@@ -206,6 +215,12 @@ async function loadCategorias() {
   const select = document.getElementById('transacao-categoria');
   if (select) {
     select.innerHTML = '<option value="">Selecione...</option>' +
+      CATEGORIAS.map((c) => `<option value="${c.slug}">${c.name}</option>`).join('');
+  }
+
+  const filtroCat = document.getElementById('filtro-categoria');
+  if (filtroCat) {
+    filtroCat.innerHTML = '<option value="todas">Todas as categorias</option>' +
       CATEGORIAS.map((c) => `<option value="${c.slug}">${c.name}</option>`).join('');
   }
 }
@@ -538,51 +553,34 @@ function limparErrosForm() {
 
 /** Inicializa os listeners da seção de transações */
 function inicializarSecaoTransacoes() {
-  // Botão "Nova Transação" da seção de listagem
   document.getElementById('btn-nova-transacao-lista')?.addEventListener('click', () => abrirModal());
 
-  // Filtros rápidos por tipo
-  document.querySelectorAll('[data-filtro-tipo]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('[data-filtro-tipo]').forEach(b => b.classList.remove('ativo'));
-      btn.classList.add('ativo');
-      estadoFiltros.tipo = btn.dataset.filtroTipo;
+  const ligaSelect = (id, prop) => {
+    document.getElementById(id)?.addEventListener('change', (e) => {
+      estadoFiltros[prop] = e.target.value;
+      estadoFiltros.pagina = 1;
       aplicarFiltros();
     });
+  };
+  ligaSelect('filtro-periodo', 'periodo');
+  ligaSelect('filtro-tipo', 'tipo');
+  ligaSelect('filtro-ordenacao', 'ordenacao');
+  ligaSelect('filtro-categoria', 'categoria');
+
+  document.getElementById('filtro-mostrar-ocultos')?.addEventListener('change', (e) => {
+    estadoFiltros.mostrarOcultos = e.target.checked;
+    estadoFiltros.pagina = 1;
+    aplicarFiltros();
   });
 
-  // Busca por texto (debounce de 300ms)
   let debounce;
   document.getElementById('filtro-busca')?.addEventListener('input', (e) => {
     clearTimeout(debounce);
     debounce = setTimeout(() => {
       estadoFiltros.busca = e.target.value.trim().toLowerCase();
+      estadoFiltros.pagina = 1;
       aplicarFiltros();
     }, 300);
-  });
-
-  // Filtros por data
-  document.getElementById('filtro-data-inicio')?.addEventListener('change', (e) => {
-    estadoFiltros.dataInicio = e.target.value;
-    aplicarFiltros();
-  });
-  document.getElementById('filtro-data-fim')?.addEventListener('change', (e) => {
-    estadoFiltros.dataFim = e.target.value;
-    aplicarFiltros();
-  });
-
-  // Limpar todos os filtros
-  document.getElementById('btn-limpar-filtros')?.addEventListener('click', () => {
-    estadoFiltros = { tipo: 'todos', busca: '', dataInicio: '', dataFim: '' };
-
-    document.getElementById('filtro-busca').value = '';
-    document.getElementById('filtro-data-inicio').value = '';
-    document.getElementById('filtro-data-fim').value = '';
-
-    document.querySelectorAll('[data-filtro-tipo]').forEach(b => b.classList.remove('ativo'));
-    document.getElementById('filtro-todos')?.classList.add('ativo');
-
-    aplicarFiltros();
   });
 }
 
@@ -601,66 +599,176 @@ async function carregarTodasTransacoes() {
   renderizarContasPagar();
 }
 
-/** Filtra a lista em memória e atualiza a tabela */
-function aplicarFiltros() {
-  let resultado = [...todasTransacoes];
+function chavePeriodo(periodo) {
+  const hoje = new Date();
+  if (periodo === 'este-mes') return chaveMes(new Date(hoje.getFullYear(), hoje.getMonth(), 1));
+  if (periodo === 'mes-passado') return chaveMes(new Date(hoje.getFullYear(), hoje.getMonth() - 1, 1));
+  return null; // 'todos'
+}
 
-  // Filtro por tipo
-  if (estadoFiltros.tipo !== 'todos') {
-    resultado = resultado.filter(t => t.tipo === estadoFiltros.tipo);
-  }
-
-  // Filtro por busca (descrição ou categoria)
+function filtrarTransacoes() {
+  let r = [...todasTransacoes];
+  if (!estadoFiltros.mostrarOcultos) r = r.filter((t) => !t.oculto);
+  const chave = chavePeriodo(estadoFiltros.periodo);
+  if (chave) r = r.filter((t) => String(t.data).slice(0, 7) === chave);
+  if (estadoFiltros.tipo !== 'todos') r = r.filter((t) => t.tipo === estadoFiltros.tipo);
+  if (estadoFiltros.categoria !== 'todas') r = r.filter((t) => t.categoria === estadoFiltros.categoria);
   if (estadoFiltros.busca) {
-    resultado = resultado.filter(t =>
-      t.descricao?.toLowerCase().includes(estadoFiltros.busca) ||
-      t.categoria?.toLowerCase().includes(estadoFiltros.busca)
-    );
+    const q = estadoFiltros.busca;
+    r = r.filter((t) =>
+      (t.descricao || '').toLowerCase().includes(q) ||
+      labelCategoria(t.categoria).toLowerCase().includes(q));
   }
+  return r;
+}
 
-  // Filtro por data de início
-  if (estadoFiltros.dataInicio) {
-    resultado = resultado.filter(t => t.data >= estadoFiltros.dataInicio);
+function ordenarTransacoes(lista) {
+  const arr = [...lista];
+  switch (estadoFiltros.ordenacao) {
+    case 'data-asc':  return arr.sort((a, b) => String(a.data).localeCompare(String(b.data)));
+    case 'valor-desc': return arr.sort((a, b) => b.valor - a.valor);
+    case 'valor-asc':  return arr.sort((a, b) => a.valor - b.valor);
+    case 'data-desc':
+    default:           return arr.sort((a, b) => String(b.data).localeCompare(String(a.data)));
   }
+}
 
-  // Filtro por data fim
-  if (estadoFiltros.dataFim) {
-    resultado = resultado.filter(t => t.data <= estadoFiltros.dataFim);
-  }
+function atualizarKpisTransacoes(filtradas) {
+  const despesas = filtradas.filter((t) => t.tipo === 'saida').reduce((s, t) => s + t.valor, 0);
+  const receitas = filtradas.filter((t) => t.tipo === 'entrada').reduce((s, t) => s + t.valor, 0);
+  const setKpi = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+  setKpi('kpi-tx-total', String(filtradas.length));
+  setKpi('kpi-tx-despesas', formatarBRL(despesas));
+  setKpi('kpi-tx-receitas', formatarBRL(receitas));
+  setKpi('kpi-tx-saldo', formatarBRL(receitas - despesas));
+}
 
-  // Ordena por data mais recente
-  resultado.sort((a, b) => b.data.localeCompare(a.data));
-
-  renderizarTabelaTransacoes(resultado);
+function aplicarFiltros() {
+  const filtradas = filtrarTransacoes();
+  atualizarKpisTransacoes(filtradas);
+  const ordenadas = ordenarTransacoes(filtradas);
+  const total = ordenadas.length;
+  const totalPaginas = Math.max(1, Math.ceil(total / estadoFiltros.porPagina));
+  if (estadoFiltros.pagina > totalPaginas) estadoFiltros.pagina = totalPaginas;
+  const ini = (estadoFiltros.pagina - 1) * estadoFiltros.porPagina;
+  const paginaAtual = ordenadas.slice(ini, ini + estadoFiltros.porPagina);
+  renderizarTabelaTransacoes(paginaAtual);
+  renderizarPaginacao(total, ini);
 }
 
 /** Renderiza a tabela completa de transações */
+function avatarCategoria(slug) {
+  const grupo = MAPA_GRUPO_CATEGORIA[slug] || 'outros';
+  const cor = GRUPOS[grupo]?.cor ?? '#b8a08a';
+  return `<span class="tx-avatar" style="background:${cor}">${emojiCategoria(slug)}</span>`;
+}
+
+function pillCategoria(slug) {
+  const grupo = MAPA_GRUPO_CATEGORIA[slug] || 'outros';
+  const cor = GRUPOS[grupo]?.cor ?? '#b8a08a';
+  return `<span class="badge-categoria" style="color:${cor};border-color:${cor}">${emojiCategoria(slug)} ${labelCategoria(slug)}</span>`;
+}
+
 function renderizarTabelaTransacoes(lista) {
-  const container  = document.getElementById('container-transacoes-lista');
-  const contagem   = document.getElementById('resultado-contagem');
-  if (!container) return;
-
-  // Atualiza contagem
-  if (contagem) {
-    contagem.innerHTML = lista.length > 0
-      ? `Exibindo <strong>${lista.length}</strong> transaç${lista.length === 1 ? 'ão' : 'ões'}`
-      : '';
+  const tbody = document.getElementById('container-transacoes-lista');
+  if (!tbody) return;
+  if (!lista.length) {
+    tbody.innerHTML = `<tr><td colspan="5">${criarEstadoVazio('Nenhuma transação encontrada.')}</td></tr>`;
+    return;
   }
+  tbody.innerHTML = lista.map((t) => {
+    const sinal = t.tipo === 'entrada' ? '+' : '';
+    return `
+    <tr data-id="${t.id}">
+      <td class="tx-col-desc">${avatarCategoria(t.categoria)}<span class="tx-desc">${t.descricao}</span></td>
+      <td>${pillCategoria(t.categoria)}</td>
+      <td class="tx-col-data">${formatarData(t.data)}</td>
+      <td class="tx-col-valor valor--${t.tipo}">${sinal}${formatarBRL(t.valor)}</td>
+      <td class="tx-col-acoes">
+        <button class="tx-acoes-btn" onclick="abrirMenuAcoes(event, '${t.id}')" aria-label="Ações">⋮</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
 
-  if (!lista.length) { container.innerHTML = criarEstadoVazio('Nenhuma transação encontrada.'); return; }
-  container.innerHTML = lista.map(t => `
-    <div class="transacao-card" data-id="${t.id}">
-      ${avatarMerchant(t.descricao)}
-      <div class="transacao-card__info">
-        <span class="transacao-card__desc">${t.descricao}</span>
-        <span class="transacao-card__meta">${labelCategoria(t.categoria)} • ${formatarData(t.data)}</span>
-      </div>
-      <span class="transacao-card__valor valor--${t.tipo}">${formatarBRL(t.valor)}</span>
-      <div class="acoes-tabela">
-        <button class="btn-acao btn-acao--editar" onclick="editarTransacao('${t.id}')" aria-label="Editar">✏️</button>
-        <button class="btn-acao btn-acao--excluir" onclick="excluirTransacao('${t.id}')" aria-label="Excluir">🗑️</button>
-      </div>
-    </div>`).join('');
+let _menuAcoesAberto = null;
+
+function fecharMenuAcoes() {
+  if (_menuAcoesAberto) { _menuAcoesAberto.remove(); _menuAcoesAberto = null; }
+  document.removeEventListener('click', _onDocClickMenu, true);
+}
+
+function _onDocClickMenu(e) {
+  if (_menuAcoesAberto && !_menuAcoesAberto.contains(e.target)) fecharMenuAcoes();
+}
+
+function abrirMenuAcoes(event, id) {
+  event.stopPropagation();
+  fecharMenuAcoes();
+  const t = todasTransacoes.find((x) => String(x.id) === String(id));
+  if (!t) return;
+  const menu = document.createElement('div');
+  menu.className = 'tx-acoes-menu';
+  menu.innerHTML = `
+    <button onclick="editarTransacao('${id}');fecharMenuAcoes()">✏️ Editar</button>
+    <button onclick="alternarOcultaTransacao('${id}')">${t.oculto ? '👁️ Mostrar' : '🙈 Ocultar'}</button>
+    <button class="tx-acoes-menu__excluir" onclick="excluirTransacao('${id}');fecharMenuAcoes()">🗑️ Excluir</button>`;
+  document.body.appendChild(menu);
+  const r = event.currentTarget.getBoundingClientRect();
+  menu.style.top = `${window.scrollY + r.bottom + 4}px`;
+  menu.style.left = `${window.scrollX + r.right - menu.offsetWidth}px`;
+  _menuAcoesAberto = menu;
+  setTimeout(() => document.addEventListener('click', _onDocClickMenu, true), 0);
+}
+
+async function alternarOcultaTransacao(id) {
+  fecharMenuAcoes();
+  const t = todasTransacoes.find((x) => String(x.id) === String(id));
+  if (!t) return;
+  try {
+    const atualizada = await TransacoesAPI.atualizar(id, { ...t, oculto: !t.oculto });
+    const idx = todasTransacoes.findIndex((x) => String(x.id) === String(id));
+    if (idx !== -1) todasTransacoes[idx] = atualizada;
+    aplicarFiltros();
+    mostrarToast(atualizada.oculto ? 'Transação ocultada.' : 'Transação visível novamente.', 'sucesso');
+  } catch (erro) {
+    console.error('Erro ao ocultar transação:', erro.message);
+    mostrarToast('Não foi possível atualizar a transação.', 'erro');
+  }
+}
+
+function renderizarPaginacao(total, ini) {
+  const cont = document.getElementById('paginacao-transacoes');
+  if (!cont) return;
+  if (!total) { cont.innerHTML = ''; return; }
+  const pp = estadoFiltros.porPagina;
+  const totalPaginas = Math.max(1, Math.ceil(total / pp));
+  const pag = estadoFiltros.pagina;
+  const de = ini + 1;
+  const ate = Math.min(ini + pp, total);
+  cont.innerHTML = `
+    <label class="tx-paginacao__pp">Por página
+      <select class="tx-select" onchange="mudarPorPagina(this.value)">
+        ${[10, 25, 50].map((n) => `<option value="${n}" ${n === pp ? 'selected' : ''}>${n}</option>`).join('')}
+      </select>
+    </label>
+    <div class="tx-paginacao__nav">
+      <span>Mostrando ${de} a ${ate} de ${total}</span>
+      <button class="tx-pag-btn" onclick="mudarPagina(${pag - 1})" ${pag <= 1 ? 'disabled' : ''} aria-label="Página anterior">‹</button>
+      <span class="tx-pag-atual">${pag}</span>
+      <button class="tx-pag-btn" onclick="mudarPagina(${pag + 1})" ${pag >= totalPaginas ? 'disabled' : ''} aria-label="Próxima página">›</button>
+    </div>`;
+}
+
+function mudarPagina(n) {
+  estadoFiltros.pagina = Math.max(1, Number(n));
+  aplicarFiltros();
+}
+
+function mudarPorPagina(n) {
+  estadoFiltros.porPagina = Number(n);
+  estadoFiltros.pagina = 1;
+  aplicarFiltros();
 }
 
 // ============================================================

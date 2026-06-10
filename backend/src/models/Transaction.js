@@ -51,6 +51,10 @@ const transactionSchema = new mongoose.Schema(
         message: 'Parcelas pagas não pode exceder o total de parcelas.',
       },
     },
+    oculto: {
+      type: Boolean,
+      default: false,
+    },
     user: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
