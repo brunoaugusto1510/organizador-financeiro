@@ -832,12 +832,40 @@ function toggleGrupoCategoria(slug) {
   renderizarPaginaCategorias();
 }
 
+/** Monta o HTML da legenda do donut a partir dos grupos e do total. */
+function _legendaDonutHTML(grupos, totalGasto) {
+  return grupos.map((g) => {
+    const label = GRUPOS[g.group]?.label ?? g.group;
+    const cor = GRUPOS[g.group]?.cor ?? '#52525b';
+    const pct = totalGasto > 0 ? Math.round((g.total / totalGasto) * 100) : 0;
+    return `
+      <li class="donut-legenda__item">
+        <span class="donut-legenda__cor" style="background:${cor}"></span>
+        <span class="donut-legenda__rotulo">${label}</span>
+        <span class="donut-legenda__pct">${pct}%</span>
+      </li>`;
+  }).join('');
+}
+
 function renderizarPaginaCategorias() {
   const doMes = transacoesDoMes();
   const saidas = doMes.filter((t) => t.tipo === 'saida');
   const totalGasto = saidas.reduce((acc, t) => acc + t.valor, 0);
 
-  // Header: total + donut-mini + navegador de mês
+  // Grupos de despesa do mês, maior fatia primeiro (legenda e donut na mesma ordem)
+  const gruposSaida = agregarPorGrupo(saidas).slice().sort((a, b) => b.total - a.total);
+  const temGasto = totalGasto > 0 && gruposSaida.length > 0;
+
+  const blocoGrafico = temGasto
+    ? `<div class="cat-header__grafico">
+         <div class="cat-header__anel">
+           <canvas id="grafico-donut-categorias" height="150" role="img" aria-label="Gráfico de gastos por categoria"></canvas>
+         </div>
+         <ul class="donut-legenda">${_legendaDonutHTML(gruposSaida, totalGasto)}</ul>
+       </div>`
+    : `<div class="cat-header__grafico cat-header__grafico--vazio">Sem gastos neste mês.</div>`;
+
+  // Header: total + donut/legenda + navegador de mês
   const header = document.getElementById('categorias-header');
   if (header) {
     header.innerHTML = `
@@ -845,9 +873,7 @@ function renderizarPaginaCategorias() {
         <strong>${formatarBRL(totalGasto)}</strong>
         <span>gasto em ${rotuloMes(mesCategorias)}</span>
       </div>
-      <div class="cat-header__donut">
-        <canvas id="grafico-donut-categorias" height="120" role="img" aria-label="Gráfico de gastos por categoria"></canvas>
-      </div>
+      ${blocoGrafico}
       <div class="cat-mes-nav">
         <button class="cat-mes-nav__btn" onclick="mudarMesCategorias(-1)" aria-label="Mês anterior">‹</button>
         <span class="cat-mes-nav__label">${rotuloMes(mesCategorias)}</span>
@@ -855,14 +881,14 @@ function renderizarPaginaCategorias() {
       </div>`;
   }
 
-  // Donut: grupos de despesa do mês
-  const gruposSaida = agregarPorGrupo(saidas);
-  criarDonut(
-    'grafico-donut-categorias',
-    gruposSaida.map((g) => GRUPOS[g.group]?.label ?? g.group),
-    gruposSaida.map((g) => g.total),
-    gruposSaida.map((g) => GRUPOS[g.group]?.cor ?? '#52525b'),
-  );
+  if (temGasto) {
+    criarDonut(
+      'grafico-donut-categorias',
+      gruposSaida.map((g) => GRUPOS[g.group]?.label ?? g.group),
+      gruposSaida.map((g) => g.total),
+      gruposSaida.map((g) => GRUPOS[g.group]?.cor ?? '#52525b'),
+    );
+  }
 
   // Lista: grupos com atividade (saída + entrada), em acordeão
   const realizadas = doMes.filter((t) => t.tipo === 'saida' || t.tipo === 'entrada');
