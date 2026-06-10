@@ -647,10 +647,11 @@ function ordenarTransacoes(lista) {
 function atualizarKpisTransacoes(filtradas) {
   const despesas = filtradas.filter((t) => t.tipo === 'saida').reduce((s, t) => s + t.valor, 0);
   const receitas = filtradas.filter((t) => t.tipo === 'entrada').reduce((s, t) => s + t.valor, 0);
-  txt('kpi-tx-total', String(filtradas.length));
-  txt('kpi-tx-despesas', formatarBRL(despesas));
-  txt('kpi-tx-receitas', formatarBRL(receitas));
-  txt('kpi-tx-saldo', formatarBRL(receitas - despesas));
+  const setKpi = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+  setKpi('kpi-tx-total', String(filtradas.length));
+  setKpi('kpi-tx-despesas', formatarBRL(despesas));
+  setKpi('kpi-tx-receitas', formatarBRL(receitas));
+  setKpi('kpi-tx-saldo', formatarBRL(receitas - despesas));
 }
 
 function aplicarFiltros() {
