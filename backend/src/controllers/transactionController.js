@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 import Transaction from '../models/Transaction.js';
-import { parcelaDoMes, addMeses } from '../utils/parcelas.js';
+import { parcelaDoMes, addMeses, contarQuitadas } from '../utils/parcelas.js';
 
 const tiposValidos = ['income', 'expense', 'pending'];
 
@@ -16,9 +16,9 @@ function validarTipo(type) {
 }
 
 function montarDadosTransacao(body) {
-  const { title, type, amount, category, date, description, parcelas, parcelasPagas, oculto } = body;
+  const { title, type, amount, category, date, description, parcelas, parcelasPagas, parcelasStatus, oculto } = body;
 
-  return {
+  const dados = {
     title,
     type,
     amount,
@@ -27,8 +27,15 @@ function montarDadosTransacao(body) {
     description,
     parcelas,
     parcelasPagas,
+    parcelasStatus,
     oculto,
   };
+
+  if (Array.isArray(parcelasStatus)) {
+    dados.parcelasPagas = contarQuitadas(parcelasStatus);
+  }
+
+  return dados;
 }
 
 export const criarTransacao = async (req, res) => {
@@ -98,7 +105,7 @@ export const editarTransacao = async (req, res) => {
     const transacaoAtualizada = await Transaction.findOneAndUpdate(
       montarFiltroUsuario(req, { _id: id }),
       dados,
-      { new: true, runValidators: true }
+      { returnDocument: 'after', runValidators: true }
     );
 
     if (!transacaoAtualizada) {

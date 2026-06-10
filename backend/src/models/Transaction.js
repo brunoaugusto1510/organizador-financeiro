@@ -40,16 +40,25 @@ const transactionSchema = new mongoose.Schema(
       default: 1,
       min: [1, 'O número de parcelas deve ser no mínimo 1.'],
     },
+    // Derivado de `parcelasStatus` (contagem de não-pendentes) no controller.
+    // Sem validator cross-field: ele não roda no contexto de `findOneAndUpdate`
+    // (`this` é a query, não o doc) e quebrava a marcação de parcelas.
     parcelasPagas: {
       type: Number,
       default: 0,
       min: [0, 'Parcelas pagas não pode ser negativo.'],
-      validate: {
-        validator: function (value) {
-          return value <= (this.parcelas ?? 1);
+    },
+    parcelasStatus: {
+      type: [
+        {
+          type: String,
+          enum: {
+            values: ['pendente', 'paga', 'adiantada'],
+            message: 'Status de parcela inválido.',
+          },
         },
-        message: 'Parcelas pagas não pode exceder o total de parcelas.',
-      },
+      ],
+      default: [],
     },
     oculto: {
       type: Boolean,

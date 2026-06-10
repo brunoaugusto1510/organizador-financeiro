@@ -4,6 +4,10 @@
  * Nada de DOM/Express/Mongoose aqui — só lógica testável.
  */
 
+export const STATUS_PENDENTE = 'pendente';
+export const STATUS_PAGA = 'paga';
+export const STATUS_ADIANTADA = 'adiantada';
+
 export function addMeses(date, n) {
   const d = new Date(date);
   d.setMonth(d.getMonth() + n);
@@ -25,9 +29,24 @@ export function parcelaDoMes(tx, ano, mes) {
   return null;
 }
 
-export function proximaParcelaEmAberto(tx) {
+export function statusDeParcelas(tx) {
   const total = tx.parcelas || 1;
-  const pagas = tx.parcelasPagas || 0;
-  if (pagas >= total) return null;
-  return { indice: pagas + 1, vencimento: addMeses(tx.date, pagas), valor: tx.amount };
+  let arr = Array.isArray(tx.parcelasStatus) ? tx.parcelasStatus.slice(0, total) : [];
+  if (arr.length === 0) {
+    const pagas = tx.parcelasPagas || 0;
+    return Array.from({ length: total }, (_, i) => (i < pagas ? STATUS_PAGA : STATUS_PENDENTE));
+  }
+  while (arr.length < total) arr.push(STATUS_PENDENTE);
+  return arr;
+}
+
+export function contarQuitadas(status) {
+  return status.filter((s) => s !== STATUS_PENDENTE).length;
+}
+
+export function proximaParcelaEmAberto(tx) {
+  const status = statusDeParcelas(tx);
+  const i = status.findIndex((s) => s === STATUS_PENDENTE);
+  if (i === -1) return null;
+  return { indice: i + 1, vencimento: addMeses(tx.date, i), valor: tx.amount };
 }

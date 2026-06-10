@@ -913,6 +913,31 @@ function renderizarPaginaCategorias() {
 // ============================================================
 // TELA PARCELAMENTOS
 // ============================================================
+const parcelasExpandidas = new Set();
+
+function toggleParcelas(id) {
+  if (parcelasExpandidas.has(id)) parcelasExpandidas.delete(id);
+  else parcelasExpandidas.add(id);
+  renderizarPaginaParcelamentos();
+}
+
+const _LABEL_STATUS = { pendente: 'Pendente', paga: 'Paga', adiantada: 'Adiantada' };
+
+function _linhaParcela(t, idx, st) {
+  const num = idx + 1;
+  const venc = formatarData(pAddMeses(t.data, idx).toISOString().split('T')[0]);
+  const acoes = st === 'pendente'
+    ? `<button class="parcela-btn parcela-btn--pagar" onclick="marcarParcela('${t.id}',${idx},'paga')">Pagar</button>
+       <button class="parcela-btn parcela-btn--adiantar" onclick="marcarParcela('${t.id}',${idx},'adiantada')">Adiantar</button>`
+    : `<button class="parcela-btn parcela-btn--desfazer" onclick="marcarParcela('${t.id}',${idx},'pendente')">Desfazer</button>`;
+  return `
+    <li class="parcela-item">
+      <span class="parcela-item__info">Parcela ${num}/${t.parcelas} • vence ${venc}</span>
+      <span class="parcela-badge parcela-badge--${st}">${_LABEL_STATUS[st]}</span>
+      <span class="parcela-item__acoes">${acoes}</span>
+    </li>`;
+}
+
 function renderizarPaginaParcelamentos() {
   const container = document.getElementById('lista-parcelamentos');
   if (!container) return;
@@ -925,13 +950,18 @@ function renderizarPaginaParcelamentos() {
 
   container.innerHTML = planos.map(t => {
     const total = t.parcelas;
-    const pagas = t.parcelasPagas || 0;
+    const statusArr = pStatusDeParcelas(t);
+    const pagas = pContarQuitadas(statusArr);
     const valorTotal = t.valor * total;
     const restante = (total - pagas) * t.valor;
     const prox = pProximaEmAberto(t);
     const proxTxt = prox ? formatarData(prox.vencimento.toISOString().split('T')[0]) : 'Concluído';
     const pct = Math.round((pagas / total) * 100);
     const badge = t.tipo === 'entrada' ? 'Entrada' : 'Saída';
+    const aberto = parcelasExpandidas.has(t.id);
+    const listaParcelas = aberto
+      ? `<ul class="parcelas-lista">${statusArr.map((st, idx) => _linhaParcela(t, idx, st)).join('')}</ul>`
+      : '';
     return `
       <div class="card-saldo-total" data-id="${t.id}">
         <div class="parcelamento-cabecalho">
@@ -941,6 +971,8 @@ function renderizarPaginaParcelamentos() {
         <p class="parcelamento-meta">${total}x de ${formatarBRL(t.valor)} • total ${formatarBRL(valorTotal)}</p>
         <div class="barra-progresso"><div class="barra-progresso__preench" style="width:${pct}%"></div></div>
         <p class="parcelamento-meta">${pagas}/${total} pagas • restante ${formatarBRL(restante)} • próximo: ${proxTxt}</p>
+        <button class="btn-parcelas-toggle" onclick="toggleParcelas('${t.id}')">Ver parcelas ${aberto ? '▴' : '▾'}</button>
+        ${listaParcelas}
         <button class="btn-acao btn-acao--excluir parcelamento-excluir" onclick="excluirTransacao('${t.id}')" aria-label="Excluir plano">🗑️ Excluir</button>
       </div>`;
   }).join('');
@@ -973,6 +1005,29 @@ async function excluirTransacao(id) {
   } catch (erro) {
     console.error('Erro ao excluir transação:', erro.message);
     mostrarToast('Não foi possível excluir a transação.', 'erro');
+  } finally {
+    mostrarSpinner(false);
+  }
+}
+
+/** Marca uma parcela específica como paga/adiantada/pendente. */
+async function marcarParcela(id, indice, status) {
+  const transacao = todasTransacoes.find((t) => String(t.id) === String(id));
+  if (!transacao) return;
+
+  const novo = pStatusDeParcelas(transacao).slice();
+  novo[indice] = status;
+
+  mostrarSpinner(true);
+  try {
+    await TransacoesAPI.atualizar(id, { ...transacao, parcelasStatus: novo });
+    await carregarTodasTransacoes();
+    renderizarPaginaParcelamentos();
+    carregarDashboard();
+    mostrarToast('Parcela atualizada.', 'sucesso');
+  } catch (erro) {
+    console.error('Erro ao marcar parcela:', erro.message);
+    mostrarToast('Não foi possível atualizar a parcela.', 'erro');
   } finally {
     mostrarSpinner(false);
   }
@@ -1075,9 +1130,20 @@ async function pagarConta(id) {
 
   mostrarSpinner(true);
 
-  const payload = ehParcela
-    ? { ...transacao, parcelasPagas: (transacao.parcelasPagas || 0) + 1 }
-    : { ...transacao, tipo: 'saida', data: new Date().toISOString().split('T')[0] };
+  let payload;
+  if (ehParcela) {
+    const status = pStatusDeParcelas(transacao).slice();
+    const i = status.findIndex((s) => s === 'pendente');
+    if (i === -1) {
+      mostrarSpinner(false);
+      mostrarToast('Plano já está quitado.', 'info');
+      return;
+    }
+    status[i] = 'paga';
+    payload = { ...transacao, parcelasStatus: status };
+  } else {
+    payload = { ...transacao, tipo: 'saida', data: new Date().toISOString().split('T')[0] };
+  }
 
   try {
     await TransacoesAPI.atualizar(id, payload);
