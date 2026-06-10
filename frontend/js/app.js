@@ -668,32 +668,84 @@ function aplicarFiltros() {
 }
 
 /** Renderiza a tabela completa de transações */
+function avatarCategoria(slug) {
+  const grupo = MAPA_GRUPO_CATEGORIA[slug] || 'outros';
+  const cor = GRUPOS[grupo]?.cor ?? '#b8a08a';
+  return `<span class="tx-avatar" style="background:${cor}">${emojiCategoria(slug)}</span>`;
+}
+
+function pillCategoria(slug) {
+  const grupo = MAPA_GRUPO_CATEGORIA[slug] || 'outros';
+  const cor = GRUPOS[grupo]?.cor ?? '#b8a08a';
+  return `<span class="badge-categoria" style="color:${cor};border-color:${cor}">${emojiCategoria(slug)} ${labelCategoria(slug)}</span>`;
+}
+
 function renderizarTabelaTransacoes(lista) {
-  const container  = document.getElementById('container-transacoes-lista');
-  const contagem   = document.getElementById('resultado-contagem');
-  if (!container) return;
-
-  // Atualiza contagem
-  if (contagem) {
-    contagem.innerHTML = lista.length > 0
-      ? `Exibindo <strong>${lista.length}</strong> transaç${lista.length === 1 ? 'ão' : 'ões'}`
-      : '';
+  const tbody = document.getElementById('container-transacoes-lista');
+  if (!tbody) return;
+  if (!lista.length) {
+    tbody.innerHTML = `<tr><td colspan="5">${criarEstadoVazio('Nenhuma transação encontrada.')}</td></tr>`;
+    return;
   }
+  tbody.innerHTML = lista.map((t) => {
+    const sinal = t.tipo === 'entrada' ? '+' : '';
+    return `
+    <tr data-id="${t.id}">
+      <td class="tx-col-desc">${avatarCategoria(t.categoria)}<span class="tx-desc">${t.descricao}</span></td>
+      <td>${pillCategoria(t.categoria)}</td>
+      <td class="tx-col-data">${formatarData(t.data)}</td>
+      <td class="tx-col-valor valor--${t.tipo}">${sinal}${formatarBRL(t.valor)}</td>
+      <td class="tx-col-acoes">
+        <button class="tx-acoes-btn" onclick="abrirMenuAcoes(event, '${t.id}')" aria-label="Ações">⋮</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
 
-  if (!lista.length) { container.innerHTML = criarEstadoVazio('Nenhuma transação encontrada.'); return; }
-  container.innerHTML = lista.map(t => `
-    <div class="transacao-card" data-id="${t.id}">
-      ${avatarMerchant(t.descricao)}
-      <div class="transacao-card__info">
-        <span class="transacao-card__desc">${t.descricao}</span>
-        <span class="transacao-card__meta">${labelCategoria(t.categoria)} • ${formatarData(t.data)}</span>
-      </div>
-      <span class="transacao-card__valor valor--${t.tipo}">${formatarBRL(t.valor)}</span>
-      <div class="acoes-tabela">
-        <button class="btn-acao btn-acao--editar" onclick="editarTransacao('${t.id}')" aria-label="Editar">✏️</button>
-        <button class="btn-acao btn-acao--excluir" onclick="excluirTransacao('${t.id}')" aria-label="Excluir">🗑️</button>
-      </div>
-    </div>`).join('');
+let _menuAcoesAberto = null;
+
+function fecharMenuAcoes() {
+  if (_menuAcoesAberto) { _menuAcoesAberto.remove(); _menuAcoesAberto = null; }
+  document.removeEventListener('click', _onDocClickMenu, true);
+}
+
+function _onDocClickMenu(e) {
+  if (_menuAcoesAberto && !_menuAcoesAberto.contains(e.target)) fecharMenuAcoes();
+}
+
+function abrirMenuAcoes(event, id) {
+  event.stopPropagation();
+  fecharMenuAcoes();
+  const t = todasTransacoes.find((x) => String(x.id) === String(id));
+  if (!t) return;
+  const menu = document.createElement('div');
+  menu.className = 'tx-acoes-menu';
+  menu.innerHTML = `
+    <button onclick="editarTransacao('${id}');fecharMenuAcoes()">✏️ Editar</button>
+    <button onclick="alternarOcultaTransacao('${id}')">${t.oculto ? '👁️ Mostrar' : '🙈 Ocultar'}</button>
+    <button class="tx-acoes-menu__excluir" onclick="excluirTransacao('${id}');fecharMenuAcoes()">🗑️ Excluir</button>`;
+  document.body.appendChild(menu);
+  const r = event.currentTarget.getBoundingClientRect();
+  menu.style.top = `${window.scrollY + r.bottom + 4}px`;
+  menu.style.left = `${window.scrollX + r.right - menu.offsetWidth}px`;
+  _menuAcoesAberto = menu;
+  setTimeout(() => document.addEventListener('click', _onDocClickMenu, true), 0);
+}
+
+async function alternarOcultaTransacao(id) {
+  fecharMenuAcoes();
+  const t = todasTransacoes.find((x) => String(x.id) === String(id));
+  if (!t) return;
+  try {
+    const atualizada = await TransacoesAPI.atualizar(id, { ...t, oculto: !t.oculto });
+    const idx = todasTransacoes.findIndex((x) => String(x.id) === String(id));
+    if (idx !== -1) todasTransacoes[idx] = atualizada;
+    aplicarFiltros();
+    mostrarToast(atualizada.oculto ? 'Transação ocultada.' : 'Transação visível novamente.', 'sucesso');
+  } catch (erro) {
+    console.error('Erro ao ocultar transação:', erro.message);
+    mostrarToast('Não foi possível atualizar a transação.', 'erro');
+  }
 }
 
 // ============================================================
