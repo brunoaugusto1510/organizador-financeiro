@@ -1010,6 +1010,29 @@ async function excluirTransacao(id) {
   }
 }
 
+/** Marca uma parcela específica como paga/adiantada/pendente. */
+async function marcarParcela(id, indice, status) {
+  const transacao = todasTransacoes.find((t) => String(t.id) === String(id));
+  if (!transacao) return;
+
+  const novo = pStatusDeParcelas(transacao).slice();
+  novo[indice] = status;
+
+  mostrarSpinner(true);
+  try {
+    await TransacoesAPI.atualizar(id, { ...transacao, parcelasStatus: novo });
+    await carregarTodasTransacoes();
+    renderizarPaginaParcelamentos();
+    carregarDashboard();
+    mostrarToast('Parcela atualizada.', 'sucesso');
+  } catch (erro) {
+    console.error('Erro ao marcar parcela:', erro.message);
+    mostrarToast('Não foi possível atualizar a parcela.', 'erro');
+  } finally {
+    mostrarSpinner(false);
+  }
+}
+
 // ============================================================
 // SEÇÃO DE CONTAS A PAGAR
 // ============================================================
