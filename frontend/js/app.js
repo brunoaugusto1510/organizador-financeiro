@@ -65,6 +65,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   inicializarModal();
   inicializarFormTransacao();
   inicializarSecaoTransacoes();
+  inicializarDropdowns();
   inicializarLogout();
   await loadCategorias();
   carregarDashboard();
@@ -223,6 +224,9 @@ async function loadCategorias() {
     filtroCat.innerHTML = '<option value="todas">Todas as categorias</option>' +
       CATEGORIAS.map((c) => `<option value="${c.slug}">${c.name}</option>`).join('');
   }
+
+  if (select) melhorarSelect(select);
+  if (filtroCat) melhorarSelect(filtroCat);
 }
 
 // --- Transações recentes ---
@@ -396,6 +400,8 @@ function abrirModal(transacao = null) {
     document.getElementById('transacao-data').value = new Date().toISOString().split('T')[0];
     selecionarTipo('entrada');
   }
+
+  document.getElementById('transacao-categoria')?.dispatchEvent(new Event('change', { bubbles: true }));
 
   atualizarFeedbackParcelas();
   modal?.classList.remove('oculto');
@@ -758,6 +764,9 @@ function renderizarPaginacao(total, ini) {
       <span class="tx-pag-atual">${pag}</span>
       <button class="tx-pag-btn" onclick="mudarPagina(${pag + 1})" ${pag >= totalPaginas ? 'disabled' : ''} aria-label="Próxima página">›</button>
     </div>`;
+
+  const ppSelect = cont.querySelector('select');
+  if (ppSelect) melhorarSelect(ppSelect);
 }
 
 function mudarPagina(n) {
