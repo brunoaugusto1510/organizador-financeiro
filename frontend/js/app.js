@@ -20,6 +20,23 @@ let todasTransacoes = [];
 let CATEGORIAS = [];
 let MAPA_LABEL_CATEGORIA = {};
 let MAPA_EMOJI_CATEGORIA = {};
+let MAPA_GRUPO_CATEGORIA = {};
+
+// Estilo dos grupos (única fonte de cor/ícone/ordem do grupo no front).
+const GRUPOS = {
+  alimentacao: { label: 'Alimentação',       icon: '🍽️', cor: '#a78bfa', ordem: 1 },
+  transporte:  { label: 'Transporte',        icon: '🚗', cor: '#60a5fa', ordem: 2 },
+  moradia:     { label: 'Moradia',           icon: '🏠', cor: '#fb923c', ordem: 3 },
+  saude:       { label: 'Saúde e bem-estar', icon: '💊', cor: '#fb7185', ordem: 4 },
+  compras:     { label: 'Compras',           icon: '🛍️', cor: '#f472b6', ordem: 5 },
+  lazer:       { label: 'Lazer',             icon: '🎮', cor: '#fbbf24', ordem: 6 },
+  educacao:    { label: 'Educação',          icon: '📚', cor: '#2dd4bf', ordem: 7 },
+  financas:    { label: 'Finanças',          icon: '💰', cor: '#34d399', ordem: 8 },
+  servicos:    { label: 'Serviços',          icon: '🧰', cor: '#94a3b8', ordem: 9 },
+  outros:      { label: 'Outros',            icon: '📦', cor: '#b8a08a', ordem: 10 },
+  renda:       { label: 'Renda',             icon: '💵', cor: '#10b981', ordem: 11 },
+};
+
 let estadoFiltros = { tipo: 'todos', busca: '', dataInicio: '', dataFim: '' };
 
 // ============================================================
@@ -179,9 +196,11 @@ async function loadCategorias() {
 
   MAPA_LABEL_CATEGORIA = {};
   MAPA_EMOJI_CATEGORIA = {};
+  MAPA_GRUPO_CATEGORIA = {};
   CATEGORIAS.forEach((c) => {
     MAPA_LABEL_CATEGORIA[c.slug] = c.name;
     MAPA_EMOJI_CATEGORIA[c.slug] = c.icon || '📦';
+    MAPA_GRUPO_CATEGORIA[c.slug] = c.group || 'outros';
   });
 
   const select = document.getElementById('transacao-categoria');
