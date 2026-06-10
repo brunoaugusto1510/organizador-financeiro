@@ -575,3 +575,32 @@
 .parcelamento-meta { color: var(--cor-texto-secundario); font-size: 0.85rem; margin-top: var(--espaco-sm); }
 .barra-progresso { height: 8px; border-radius: var(--raio-pill); background: var(--cor-borda); overflow: hidden; margin-top: var(--espaco-sm); }
 .barra-progresso__preench { height: 100%; background: var(--cor-primaria); }
+
+/* ===== Dropdown custom (enhancement de <select>) ===== */
+.select-custom { position: relative; display: inline-block; }
+.select-custom__nativo {
+  position: absolute; width: 1px; height: 1px;
+  opacity: 0; pointer-events: none; margin: 0;
+}
+.select-custom__controle {
+  display: inline-flex; align-items: center; justify-content: space-between; gap: 8px;
+  width: 100%; text-align: left;
+}
+.select-custom__rotulo { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.select-custom__chevron {
+  font-size: 0.7rem; line-height: 1; transition: transform 0.15s ease; flex: 0 0 auto;
+}
+.select-custom--aberto .select-custom__chevron { transform: rotate(180deg); }
+
+.select-custom__lista {
+  position: absolute; z-index: 60; top: calc(100% + 4px); left: 0; min-width: 100%;
+  max-height: 280px; overflow-y: auto; margin: 0; padding: 6px; list-style: none;
+  background: #18181b; border: 1px solid rgba(255,255,255,0.10);
+  border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+}
+.select-custom__opcao {
+  padding: 9px 12px; border-radius: 8px; cursor: pointer; font-size: 0.9rem;
+  color: #e4e4e7; white-space: nowrap;
+}
+.select-custom__opcao:hover { background: rgba(255,255,255,0.08); }
+.select-custom__opcao--selecionada { background: rgba(255,255,255,0.06); font-weight: 600; }
