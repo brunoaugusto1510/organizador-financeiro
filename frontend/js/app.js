@@ -37,7 +37,16 @@ const GRUPOS = {
   renda:       { label: 'Renda',             icon: '💵', cor: '#10b981', ordem: 11 },
 };
 
-let estadoFiltros = { tipo: 'todos', busca: '', dataInicio: '', dataFim: '' };
+let estadoFiltros = {
+  periodo: 'este-mes',      // 'este-mes' | 'mes-passado' | 'todos'
+  tipo: 'todos',            // 'todos' | 'entrada' | 'saida' | 'pendente'
+  ordenacao: 'data-desc',   // 'data-desc' | 'data-asc' | 'valor-desc' | 'valor-asc'
+  categoria: 'todas',       // 'todas' | <slug>
+  busca: '',
+  mostrarOcultos: false,
+  pagina: 1,
+  porPagina: 10,
+};
 
 // ============================================================
 // INICIALIZAÇÃO
@@ -601,37 +610,60 @@ async function carregarTodasTransacoes() {
   renderizarContasPagar();
 }
 
-/** Filtra a lista em memória e atualiza a tabela */
-function aplicarFiltros() {
-  let resultado = [...todasTransacoes];
+function chavePeriodo(periodo) {
+  const hoje = new Date();
+  if (periodo === 'este-mes') return chaveMes(new Date(hoje.getFullYear(), hoje.getMonth(), 1));
+  if (periodo === 'mes-passado') return chaveMes(new Date(hoje.getFullYear(), hoje.getMonth() - 1, 1));
+  return null; // 'todos'
+}
 
-  // Filtro por tipo
-  if (estadoFiltros.tipo !== 'todos') {
-    resultado = resultado.filter(t => t.tipo === estadoFiltros.tipo);
-  }
-
-  // Filtro por busca (descrição ou categoria)
+function filtrarTransacoes() {
+  let r = [...todasTransacoes];
+  if (!estadoFiltros.mostrarOcultos) r = r.filter((t) => !t.oculto);
+  const chave = chavePeriodo(estadoFiltros.periodo);
+  if (chave) r = r.filter((t) => String(t.data).slice(0, 7) === chave);
+  if (estadoFiltros.tipo !== 'todos') r = r.filter((t) => t.tipo === estadoFiltros.tipo);
+  if (estadoFiltros.categoria !== 'todas') r = r.filter((t) => t.categoria === estadoFiltros.categoria);
   if (estadoFiltros.busca) {
-    resultado = resultado.filter(t =>
-      t.descricao?.toLowerCase().includes(estadoFiltros.busca) ||
-      t.categoria?.toLowerCase().includes(estadoFiltros.busca)
-    );
+    const q = estadoFiltros.busca;
+    r = r.filter((t) =>
+      (t.descricao || '').toLowerCase().includes(q) ||
+      labelCategoria(t.categoria).toLowerCase().includes(q));
   }
+  return r;
+}
 
-  // Filtro por data de início
-  if (estadoFiltros.dataInicio) {
-    resultado = resultado.filter(t => t.data >= estadoFiltros.dataInicio);
+function ordenarTransacoes(lista) {
+  const arr = [...lista];
+  switch (estadoFiltros.ordenacao) {
+    case 'data-asc':  return arr.sort((a, b) => String(a.data).localeCompare(String(b.data)));
+    case 'valor-desc': return arr.sort((a, b) => b.valor - a.valor);
+    case 'valor-asc':  return arr.sort((a, b) => a.valor - b.valor);
+    case 'data-desc':
+    default:           return arr.sort((a, b) => String(b.data).localeCompare(String(a.data)));
   }
+}
 
-  // Filtro por data fim
-  if (estadoFiltros.dataFim) {
-    resultado = resultado.filter(t => t.data <= estadoFiltros.dataFim);
-  }
+function atualizarKpisTransacoes(filtradas) {
+  const despesas = filtradas.filter((t) => t.tipo === 'saida').reduce((s, t) => s + t.valor, 0);
+  const receitas = filtradas.filter((t) => t.tipo === 'entrada').reduce((s, t) => s + t.valor, 0);
+  txt('kpi-tx-total', String(filtradas.length));
+  txt('kpi-tx-despesas', formatarBRL(despesas));
+  txt('kpi-tx-receitas', formatarBRL(receitas));
+  txt('kpi-tx-saldo', formatarBRL(receitas - despesas));
+}
 
-  // Ordena por data mais recente
-  resultado.sort((a, b) => b.data.localeCompare(a.data));
-
-  renderizarTabelaTransacoes(resultado);
+function aplicarFiltros() {
+  const filtradas = filtrarTransacoes();
+  atualizarKpisTransacoes(filtradas);
+  const ordenadas = ordenarTransacoes(filtradas);
+  const total = ordenadas.length;
+  const totalPaginas = Math.max(1, Math.ceil(total / estadoFiltros.porPagina));
+  if (estadoFiltros.pagina > totalPaginas) estadoFiltros.pagina = totalPaginas;
+  const ini = (estadoFiltros.pagina - 1) * estadoFiltros.porPagina;
+  const paginaAtual = ordenadas.slice(ini, ini + estadoFiltros.porPagina);
+  renderizarTabelaTransacoes(paginaAtual);
+  renderizarPaginacao(total, ini);
 }
 
 /** Renderiza a tabela completa de transações */
