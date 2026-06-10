@@ -35,6 +35,22 @@ const transactionSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
+    parcelas: {
+      type: Number,
+      default: 1,
+      min: [1, 'O número de parcelas deve ser no mínimo 1.'],
+    },
+    parcelasPagas: {
+      type: Number,
+      default: 0,
+      min: [0, 'Parcelas pagas não pode ser negativo.'],
+      validate: {
+        validator: function (value) {
+          return value <= (this.parcelas ?? 1);
+        },
+        message: 'Parcelas pagas não pode exceder o total de parcelas.',
+      },
+    },
     user: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',

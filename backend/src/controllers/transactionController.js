@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import Transaction from '../models/Transaction.js';
+import { parcelaDoMes, addMeses } from '../utils/parcelas.js';
 
 const tiposValidos = ['income', 'expense', 'pending'];
 
@@ -15,7 +16,7 @@ function validarTipo(type) {
 }
 
 function montarDadosTransacao(body) {
-  const { title, type, amount, category, date, description } = body;
+  const { title, type, amount, category, date, description, parcelas, parcelasPagas } = body;
 
   return {
     title,
@@ -24,6 +25,8 @@ function montarDadosTransacao(body) {
     category,
     date,
     description,
+    parcelas,
+    parcelasPagas,
   };
 }
 
@@ -217,45 +220,78 @@ export const resumirDashboard = async (req, res) => {
     const diasAnterior = new Date(ano, mes, 0).getDate();
     const diaCorrente = Math.min(hoje.getDate(), diasAtual);
 
-    // Resumo do mês atual por tipo
+    // Resumo do mês atual por tipo (apenas não parcelados)
     const totais = await Transaction.aggregate([
-      { $match: { user: userId, date: { $gte: atual.inicio, $lt: atual.fim } } },
+      { $match: { user: userId, parcelas: { $lte: 1 }, date: { $gte: atual.inicio, $lt: atual.fim } } },
       { $group: { _id: '$type', total: { $sum: '$amount' } } },
     ]);
     const resumoMap = totais.reduce((acc, item) => {
       acc[item._id] = item.total;
       return acc;
     }, {});
-    const entradas = resumoMap.income || 0;
-    const saidas = resumoMap.expense || 0;
+    let entradas = resumoMap.income || 0;
+    let saidas = resumoMap.expense || 0;
     const pendentes = resumoMap.pending || 0;
 
-    // Gasto (expense) do mês anterior para comparativo
+    // Gasto (expense) do mês anterior para comparativo (não parcelados)
     const gastoAnteriorAgg = await Transaction.aggregate([
-      { $match: { user: userId, type: 'expense', date: { $gte: anterior.inicio, $lt: anterior.fim } } },
+      { $match: { user: userId, type: 'expense', parcelas: { $lte: 1 }, date: { $gte: anterior.inicio, $lt: anterior.fim } } },
       { $group: { _id: null, total: { $sum: '$amount' } } },
     ]);
-    const gastoAtual = saidas;
-    const gastoAnterior = gastoAnteriorAgg[0]?.total || 0;
-    const difPct = gastoAnterior > 0 ? ((gastoAtual - gastoAnterior) / gastoAnterior) * 100 : 0;
+    let gastoAnterior = gastoAnteriorAgg[0]?.total || 0;
 
-    // Séries diárias (expense + pending) dos dois meses
+    // Séries diárias (expense + pending) dos dois meses (não parcelados)
     const tipoGasto = { $in: ['expense', 'pending'] };
     const [txAtual, txAnterior] = await Promise.all([
-      Transaction.find({ user: userId, type: tipoGasto, date: { $gte: atual.inicio, $lt: atual.fim } }, 'amount date'),
-      Transaction.find({ user: userId, type: tipoGasto, date: { $gte: anterior.inicio, $lt: anterior.fim } }, 'amount date'),
+      Transaction.find({ user: userId, type: tipoGasto, parcelas: { $lte: 1 }, date: { $gte: atual.inicio, $lt: atual.fim } }, 'amount date'),
+      Transaction.find({ user: userId, type: tipoGasto, parcelas: { $lte: 1 }, date: { $gte: anterior.inicio, $lt: anterior.fim } }, 'amount date'),
     ]);
     const serieAtualFull = acumularPorDia(txAtual, diasAtual);
-    const serieAtual = serieAtualFull.map((v, i) => (i + 1 <= diaCorrente ? v : null));
     const serieAnterior = acumularPorDia(txAnterior, diasAnterior);
 
-    // Categorias (expense) do mês atual, desc
+    // Categorias (expense) do mês atual, desc (não parcelados)
     const categoriasAgg = await Transaction.aggregate([
-      { $match: { user: userId, type: 'expense', date: { $gte: atual.inicio, $lt: atual.fim } } },
+      { $match: { user: userId, type: 'expense', parcelas: { $lte: 1 }, date: { $gte: atual.inicio, $lt: atual.fim } } },
       { $group: { _id: '$category', total: { $sum: '$amount' } } },
       { $sort: { total: -1 } },
     ]);
     const categorias = categoriasAgg.map((c) => ({ categoria: c._id || 'outros', total: c.total }));
+
+    // Parcelados (income/expense; por design não usam 'pending'): cada parcela
+    // impacta o mês em que vence — somada ao seu tipo, à série e à categoria.
+    const parcelados = await Transaction.find({ user: userId, parcelas: { $gt: 1 } }, 'type amount category date parcelas');
+    for (const p of parcelados) {
+      const noMesAtual = parcelaDoMes(p, ano, mes);
+      const noMesAnterior = parcelaDoMes(p, anterior.inicio.getFullYear(), anterior.inicio.getMonth());
+
+      if (noMesAtual) {
+        if (p.type === 'income') {
+          entradas += p.amount;
+        } else if (p.type === 'expense') {
+          saidas += p.amount;
+          const vencAtual = addMeses(p.date, noMesAtual - 1);
+          const dia = Math.min(vencAtual.getDate(), diasAtual);
+          const valorSerie = Math.round(p.amount);
+          for (let i = dia - 1; i < serieAtualFull.length; i++) serieAtualFull[i] += valorSerie;
+          const cat = p.category || 'outros';
+          const alvo = categorias.find((c) => c.categoria === cat);
+          if (alvo) alvo.total += p.amount;
+          else categorias.push({ categoria: cat, total: p.amount });
+        }
+      }
+      if (noMesAnterior && p.type === 'expense') {
+        gastoAnterior += p.amount;
+        const vencAnt = addMeses(p.date, noMesAnterior - 1);
+        const diaAnt = Math.min(vencAnt.getDate(), diasAnterior);
+        const valorSerieAnt = Math.round(p.amount);
+        for (let i = diaAnt - 1; i < serieAnterior.length; i++) serieAnterior[i] += valorSerieAnt;
+      }
+    }
+
+    categorias.sort((a, b) => b.total - a.total);
+    const gastoAtual = saidas;
+    const difPct = gastoAnterior > 0 ? ((gastoAtual - gastoAnterior) / gastoAnterior) * 100 : 0;
+    const serieAtual = serieAtualFull.map((v, i) => (i + 1 <= diaCorrente ? v : null));
 
     return res.status(200).json({
       resumo: { saldo: entradas - saidas, entradas, saidas, pendentes },

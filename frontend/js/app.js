@@ -230,6 +230,7 @@ function inicializarNavegacao() {
     // Render lazy da tela alvo
     switch (alvo) {
       case 'categorias':    renderizarPaginaCategorias(); break;
+      case 'parcelamentos': renderizarPaginaParcelamentos(); break;
     }
   }
 
@@ -344,7 +345,10 @@ function abrirModal(transacao = null) {
     titulo.textContent = 'Editar Transação';
     document.getElementById('transacao-id').value          = transacao.id ?? '';
     document.getElementById('transacao-descricao').value   = transacao.descricao ?? '';
-    document.getElementById('transacao-valor').value       = transacao.valor ?? '';
+    const totalParcelas = transacao.parcelas ?? 1;
+    document.getElementById('transacao-valor').value = (transacao.valor ?? 0) * totalParcelas;
+    const inpParc = document.getElementById('transacao-parcelas');
+    if (inpParc) inpParc.value = totalParcelas;
     document.getElementById('transacao-data').value        = transacao.data ?? '';
     document.getElementById('transacao-categoria').value   = transacao.categoria ?? '';
     document.getElementById('transacao-observacao').value  = transacao.observacao ?? '';
@@ -359,6 +363,7 @@ function abrirModal(transacao = null) {
     selecionarTipo('entrada');
   }
 
+  atualizarFeedbackParcelas();
   modal?.classList.remove('oculto');
   document.body.style.overflow = 'hidden';
   document.getElementById('transacao-descricao')?.focus();
@@ -384,12 +389,25 @@ function inicializarFormTransacao() {
     btn.addEventListener('click', () => selecionarTipo(btn.dataset.tipo));
   });
 
+  // --- Feedback dinâmico de parcelas ---
+  document.getElementById('transacao-valor')?.addEventListener('input', atualizarFeedbackParcelas);
+  document.getElementById('transacao-parcelas')?.addEventListener('input', atualizarFeedbackParcelas);
+
   // --- Submit ---
   document.getElementById('form-transacao')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     if (!validarFormTransacao()) return;
     await salvarTransacao();
   });
+}
+
+/** Atualiza o feedback "Nx de R$ y" do formulário de parcelas. */
+function atualizarFeedbackParcelas() {
+  const total = parseFloat(document.getElementById('transacao-valor').value) || 0;
+  const n = parseInt(document.getElementById('transacao-parcelas')?.value ?? '1', 10) || 1;
+  const fb = document.getElementById('parcelas-feedback');
+  if (!fb) return;
+  fb.textContent = (n > 1 && total > 0) ? `${n}x de ${formatarBRL(total / n)}` : '';
 }
 
 /** Ativa o botão de tipo e atualiza o campo hidden */
@@ -399,9 +417,9 @@ function selecionarTipo(tipo) {
   });
   document.getElementById('transacao-tipo').value = tipo;
 
-  // Mostra parcelas somente para saídas
+  // Mostra parcelas para entrada e saída; oculta para pendente
   const grupoParcelas = document.getElementById('grupo-parcelas');
-  if (grupoParcelas) grupoParcelas.hidden = tipo !== 'saida';
+  if (grupoParcelas) grupoParcelas.hidden = (tipo === 'pendente');
 }
 
 /** Valida os campos obrigatórios */
@@ -442,13 +460,20 @@ async function salvarTransacao() {
   mostrarSpinner(true);
 
   const id = document.getElementById('transacao-id').value;
+  const totalDigitado = parseFloat(document.getElementById('transacao-valor').value);
+  const nParcelas = parseInt(document.getElementById('transacao-parcelas')?.value ?? '1', 10) || 1;
+  const tipoSel = document.getElementById('transacao-tipo').value;
+  const valorParcela = (tipoSel !== 'pendente' && nParcelas > 1)
+    ? Math.round((totalDigitado / nParcelas) * 100) / 100
+    : totalDigitado;
+
   const payload = {
-    tipo:       document.getElementById('transacao-tipo').value,
+    tipo:       tipoSel,
     descricao:  document.getElementById('transacao-descricao').value.trim(),
-    valor:      parseFloat(document.getElementById('transacao-valor').value),
+    valor:      valorParcela,
     data:       document.getElementById('transacao-data').value,
     categoria:  document.getElementById('transacao-categoria').value,
-    parcelas:   parseInt(document.getElementById('transacao-parcelas')?.value ?? '1', 10),
+    parcelas:   (tipoSel !== 'pendente') ? nParcelas : 1,
     observacao: document.getElementById('transacao-observacao').value.trim(),
   };
 
@@ -632,6 +657,42 @@ function renderizarPaginaCategorias() {
     <div class="investimento-row"><span>${labelCategoria(d.categoria)}</span><strong>${formatarBRL(d.total)}</strong></div>`).join('') || criarEstadoVazio('Sem gastos no período.');
 }
 
+// ============================================================
+// TELA PARCELAMENTOS
+// ============================================================
+function renderizarPaginaParcelamentos() {
+  const container = document.getElementById('lista-parcelamentos');
+  if (!container) return;
+
+  const planos = todasTransacoes.filter(pEhParcelado);
+  if (!planos.length) {
+    container.innerHTML = criarEstadoVazio('Nenhum parcelamento ativo. Crie uma transação com mais de 1 parcela.');
+    return;
+  }
+
+  container.innerHTML = planos.map(t => {
+    const total = t.parcelas;
+    const pagas = t.parcelasPagas || 0;
+    const valorTotal = t.valor * total;
+    const restante = (total - pagas) * t.valor;
+    const prox = pProximaEmAberto(t);
+    const proxTxt = prox ? formatarData(prox.vencimento.toISOString().split('T')[0]) : 'Concluído';
+    const pct = Math.round((pagas / total) * 100);
+    const badge = t.tipo === 'entrada' ? 'Entrada' : 'Saída';
+    return `
+      <div class="card-saldo-total" data-id="${t.id}">
+        <div class="parcelamento-cabecalho">
+          <strong>${t.descricao}</strong>
+          <span class="badge-categoria">${badge}</span>
+        </div>
+        <p class="parcelamento-meta">${total}x de ${formatarBRL(t.valor)} • total ${formatarBRL(valorTotal)}</p>
+        <div class="barra-progresso"><div class="barra-progresso__preench" style="width:${pct}%"></div></div>
+        <p class="parcelamento-meta">${pagas}/${total} pagas • restante ${formatarBRL(restante)} • próximo: ${proxTxt}</p>
+        <button class="btn-acao btn-acao--excluir" onclick="excluirTransacao('${t.id}')" aria-label="Excluir plano">🗑️ Excluir</button>
+      </div>`;
+  }).join('');
+}
+
 /** Abre o modal preenchido para edição */
 function editarTransacao(id) {
   const transacao = todasTransacoes.find(t => String(t.id) === String(id));
@@ -671,9 +732,28 @@ function renderizarContasPagar() {
   const totalPendenteEl = document.getElementById('total-contas-pendentes');
   if (!container || !totalPendenteEl) return;
 
-  // Filtra as pendentes
-  const pendentes = todasTransacoes.filter(t => t.tipo === 'pendente');
-  
+  // Pendentes avulsos (tipo pendente, não parcelado)
+  const avulsos = todasTransacoes
+    .filter(t => t.tipo === 'pendente' && !pEhParcelado(t))
+    .map(t => ({ id: t.id, descricao: t.descricao, categoria: t.categoria, data: t.data, valor: t.valor, parcela: null }));
+
+  // Próxima parcela em aberto de cada plano de SAÍDA parcelado
+  const parcelasAbertas = todasTransacoes
+    .filter(t => t.tipo === 'saida' && pEhParcelado(t) && !pConcluido(t))
+    .map(t => {
+      const prox = pProximaEmAberto(t);
+      return {
+        id: t.id,
+        descricao: t.descricao,
+        categoria: t.categoria,
+        data: prox.vencimento.toISOString().split('T')[0],
+        valor: prox.valor,
+        parcela: { indice: prox.indice, total: t.parcelas },
+      };
+    });
+
+  const pendentes = [...avulsos, ...parcelasAbertas];
+
   // Ordena por data (da mais próxima para a mais distante)
   pendentes.sort((a, b) => a.data.localeCompare(b.data));
 
@@ -686,24 +766,24 @@ function renderizarContasPagar() {
     return;
   }
 
-  const linhas = pendentes.map(t => `
-    <tr data-id="${t.id}">
-      <td>${formatarData(t.data)}</td>
-      <td><span class="descricao-cell">${t.descricao}</span></td>
-      <td><span class="badge-categoria">${labelCategoria(t.categoria)}</span></td>
-      <td class="valor-cell valor--pendente">${formatarBRL(t.valor)}</td>
+  const linhas = pendentes.map(linha => `
+    <tr data-id="${linha.id}">
+      <td>${formatarData(linha.data)}</td>
+      <td><span class="descricao-cell">${linha.descricao}${linha.parcela ? ` • Parcela ${linha.parcela.indice}/${linha.parcela.total}` : ''}</span></td>
+      <td><span class="badge-categoria">${labelCategoria(linha.categoria)}</span></td>
+      <td class="valor-cell valor--pendente">${formatarBRL(linha.valor)}</td>
       <td>
         <div class="acoes-tabela">
           <button class="btn-acao" style="color: var(--cor-sucesso); border-color: var(--cor-sucesso);"
-                  onclick="pagarConta('${t.id}')"
+                  onclick="pagarConta('${linha.id}')"
                   aria-label="Marcar como pago"
                   title="Pagar">✔️</button>
           <button class="btn-acao btn-acao--editar"
-                  onclick="editarTransacao('${t.id}')"
+                  onclick="editarTransacao('${linha.id}')"
                   aria-label="Editar conta"
                   title="Editar">✏️</button>
           <button class="btn-acao btn-acao--excluir"
-                  onclick="excluirTransacao('${t.id}')"
+                  onclick="excluirTransacao('${linha.id}')"
                   aria-label="Excluir conta"
                   title="Excluir">🗑️</button>
         </div>
@@ -733,24 +813,26 @@ async function pagarConta(id) {
   const transacao = todasTransacoes.find(t => String(t.id) === String(id));
   if (!transacao) return;
 
-  const confirmar = window.confirm(`Deseja marcar "${transacao.descricao}" como pago?`);
-  if (!confirmar) return;
+  const ehParcela = pEhParcelado(transacao);
+  const msg = ehParcela
+    ? `Marcar a próxima parcela de "${transacao.descricao}" como paga?`
+    : `Deseja marcar "${transacao.descricao}" como pago?`;
+  if (!window.confirm(msg)) return;
 
   mostrarSpinner(true);
-  const payloadAtualizado = {
-    ...transacao,
-    tipo: 'saida',
-    data: new Date().toISOString().split('T')[0],
-  };
+
+  const payload = ehParcela
+    ? { ...transacao, parcelasPagas: (transacao.parcelasPagas || 0) + 1 }
+    : { ...transacao, tipo: 'saida', data: new Date().toISOString().split('T')[0] };
 
   try {
-    await TransacoesAPI.atualizar(id, payloadAtualizado);
+    await TransacoesAPI.atualizar(id, payload);
     await carregarTodasTransacoes();
     carregarDashboard();
-    mostrarToast('Conta marcada como paga!', 'sucesso');
+    mostrarToast(ehParcela ? 'Parcela paga!' : 'Conta marcada como paga!', 'sucesso');
   } catch (erro) {
-    console.error('Erro ao pagar conta:', erro.message);
-    mostrarToast('Não foi possível marcar a conta como paga.', 'erro');
+    console.error('Erro ao pagar:', erro.message);
+    mostrarToast('Não foi possível registrar o pagamento.', 'erro');
   } finally {
     mostrarSpinner(false);
   }
