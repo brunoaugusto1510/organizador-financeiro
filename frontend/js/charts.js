@@ -87,7 +87,7 @@ function criarDonut(canvasId, labels, valores, cores = CORES_GRAFICO) {
     data: { labels, datasets: [{ data: valores, backgroundColor: cores, borderWidth: 0 }] },
     options: {
       responsive: true, cutout: '68%',
-      plugins: { legend: { position: 'bottom', labels: { color: '#a1a1aa', padding: 16 } } },
+      plugins: { legend: { display: false } },
     },
   });
 }
