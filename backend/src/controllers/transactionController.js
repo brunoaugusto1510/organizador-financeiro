@@ -105,7 +105,7 @@ export const editarTransacao = async (req, res) => {
     const transacaoAtualizada = await Transaction.findOneAndUpdate(
       montarFiltroUsuario(req, { _id: id }),
       dados,
-      { new: true, runValidators: true }
+      { returnDocument: 'after', runValidators: true }
     );
 
     if (!transacaoAtualizada) {
