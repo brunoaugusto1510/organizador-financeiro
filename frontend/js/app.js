@@ -913,6 +913,31 @@ function renderizarPaginaCategorias() {
 // ============================================================
 // TELA PARCELAMENTOS
 // ============================================================
+const parcelasExpandidas = new Set();
+
+function toggleParcelas(id) {
+  if (parcelasExpandidas.has(id)) parcelasExpandidas.delete(id);
+  else parcelasExpandidas.add(id);
+  renderizarPaginaParcelamentos();
+}
+
+const _LABEL_STATUS = { pendente: 'Pendente', paga: 'Paga', adiantada: 'Adiantada' };
+
+function _linhaParcela(t, idx, st) {
+  const num = idx + 1;
+  const venc = formatarData(pAddMeses(t.data, idx).toISOString().split('T')[0]);
+  const acoes = st === 'pendente'
+    ? `<button class="parcela-btn parcela-btn--pagar" onclick="marcarParcela('${t.id}',${idx},'paga')">Pagar</button>
+       <button class="parcela-btn parcela-btn--adiantar" onclick="marcarParcela('${t.id}',${idx},'adiantada')">Adiantar</button>`
+    : `<button class="parcela-btn parcela-btn--desfazer" onclick="marcarParcela('${t.id}',${idx},'pendente')">Desfazer</button>`;
+  return `
+    <li class="parcela-item">
+      <span class="parcela-item__info">Parcela ${num}/${t.parcelas} • vence ${venc}</span>
+      <span class="parcela-badge parcela-badge--${st}">${_LABEL_STATUS[st]}</span>
+      <span class="parcela-item__acoes">${acoes}</span>
+    </li>`;
+}
+
 function renderizarPaginaParcelamentos() {
   const container = document.getElementById('lista-parcelamentos');
   if (!container) return;
@@ -932,6 +957,11 @@ function renderizarPaginaParcelamentos() {
     const proxTxt = prox ? formatarData(prox.vencimento.toISOString().split('T')[0]) : 'Concluído';
     const pct = Math.round((pagas / total) * 100);
     const badge = t.tipo === 'entrada' ? 'Entrada' : 'Saída';
+    const aberto = parcelasExpandidas.has(t.id);
+    const statusArr = pStatusDeParcelas(t);
+    const listaParcelas = aberto
+      ? `<ul class="parcelas-lista">${statusArr.map((st, idx) => _linhaParcela(t, idx, st)).join('')}</ul>`
+      : '';
     return `
       <div class="card-saldo-total" data-id="${t.id}">
         <div class="parcelamento-cabecalho">
@@ -941,6 +971,8 @@ function renderizarPaginaParcelamentos() {
         <p class="parcelamento-meta">${total}x de ${formatarBRL(t.valor)} • total ${formatarBRL(valorTotal)}</p>
         <div class="barra-progresso"><div class="barra-progresso__preench" style="width:${pct}%"></div></div>
         <p class="parcelamento-meta">${pagas}/${total} pagas • restante ${formatarBRL(restante)} • próximo: ${proxTxt}</p>
+        <button class="btn-parcelas-toggle" onclick="toggleParcelas('${t.id}')">Ver parcelas ${aberto ? '▴' : '▾'}</button>
+        ${listaParcelas}
         <button class="btn-acao btn-acao--excluir parcelamento-excluir" onclick="excluirTransacao('${t.id}')" aria-label="Excluir plano">🗑️ Excluir</button>
       </div>`;
   }).join('');
