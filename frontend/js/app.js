@@ -1130,9 +1130,20 @@ async function pagarConta(id) {
 
   mostrarSpinner(true);
 
-  const payload = ehParcela
-    ? { ...transacao, parcelasPagas: (transacao.parcelasPagas || 0) + 1 }
-    : { ...transacao, tipo: 'saida', data: new Date().toISOString().split('T')[0] };
+  let payload;
+  if (ehParcela) {
+    const status = pStatusDeParcelas(transacao).slice();
+    const i = status.findIndex((s) => s === 'pendente');
+    if (i === -1) {
+      mostrarSpinner(false);
+      mostrarToast('Plano já está quitado.', 'info');
+      return;
+    }
+    status[i] = 'paga';
+    payload = { ...transacao, parcelasStatus: status };
+  } else {
+    payload = { ...transacao, tipo: 'saida', data: new Date().toISOString().split('T')[0] };
+  }
 
   try {
     await TransacoesAPI.atualizar(id, payload);
