@@ -141,22 +141,60 @@
       <!-- 2. TRANSAÇÕES -->
       <section class="pagina" id="transacoes">
         <h1 class="pagina-titulo">Transações</h1>
-        <div class="filtros" role="group" aria-label="Filtros">
-          <div class="filtros__tipos">
-            <button class="filtro-btn ativo" id="filtro-todos" data-filtro-tipo="todos" type="button">Todas</button>
-            <button class="filtro-btn" data-filtro-tipo="entrada" type="button">Entradas</button>
-            <button class="filtro-btn" data-filtro-tipo="saida" type="button">Saídas</button>
-            <button class="filtro-btn" data-filtro-tipo="pendente" type="button">Pendentes</button>
-          </div>
-          <div class="filtros__campos">
-            <input type="search" id="filtro-busca" placeholder="Buscar..." aria-label="Buscar transações" />
-            <input type="date" id="filtro-data-inicio" aria-label="Data início" />
-            <input type="date" id="filtro-data-fim" aria-label="Data fim" />
-            <button class="btn btn--secundario" id="btn-limpar-filtros" type="button">Limpar</button>
-          </div>
+
+        <div class="tx-filtros" role="group" aria-label="Filtros">
+          <select class="tx-select" id="filtro-periodo" aria-label="Período">
+            <option value="este-mes">Este mês</option>
+            <option value="mes-passado">Mês passado</option>
+            <option value="todos">Todos</option>
+          </select>
+          <select class="tx-select" id="filtro-tipo" aria-label="Tipo de transação">
+            <option value="todos">Todas Transações</option>
+            <option value="entrada">Entradas</option>
+            <option value="saida">Saídas</option>
+            <option value="pendente">Pendentes</option>
+          </select>
+          <select class="tx-select" id="filtro-ordenacao" aria-label="Ordenação">
+            <option value="data-desc">Data (mais recentes)</option>
+            <option value="data-asc">Data (mais antigas)</option>
+            <option value="valor-desc">Maior valor</option>
+            <option value="valor-asc">Menor valor</option>
+          </select>
+          <select class="tx-select" id="filtro-categoria" aria-label="Categorias">
+            <option value="todas">Todas as categorias</option>
+          </select>
+          <label class="tx-toggle">
+            <input type="checkbox" id="filtro-mostrar-ocultos" />
+            <span>Mostrar ocultos</span>
+          </label>
         </div>
-        <p class="resultado-contagem" id="resultado-contagem" aria-live="polite"></p>
-        <div id="container-transacoes-lista"></div>
+
+        <div class="tx-kpis">
+          <div class="kpi"><span class="kpi__rotulo">Total</span><span class="kpi__valor" id="kpi-tx-total">0</span></div>
+          <div class="kpi"><span class="kpi__rotulo">Despesas</span><span class="kpi__valor valor--saida" id="kpi-tx-despesas">—</span></div>
+          <div class="kpi"><span class="kpi__rotulo">Receitas</span><span class="kpi__valor valor--entrada" id="kpi-tx-receitas">—</span></div>
+          <div class="kpi"><span class="kpi__rotulo">Saldo</span><span class="kpi__valor" id="kpi-tx-saldo">—</span></div>
+        </div>
+
+        <div class="tx-barra-acoes">
+          <input type="search" id="filtro-busca" class="tx-busca" placeholder="Buscar transações..." aria-label="Buscar transações" />
+          <button class="btn btn--primario" id="btn-nova-transacao-lista" type="button">＋ Nova Transação</button>
+        </div>
+
+        <table class="tabela-transacoes">
+          <thead>
+            <tr>
+              <th scope="col">Descrição</th>
+              <th scope="col">Categoria</th>
+              <th scope="col">Data</th>
+              <th scope="col">Valor</th>
+              <th scope="col" aria-label="Ações"></th>
+            </tr>
+          </thead>
+          <tbody id="container-transacoes-lista"></tbody>
+        </table>
+
+        <div class="tx-paginacao" id="paginacao-transacoes"></div>
       </section>
 
       <!-- 3. CATEGORIAS -->
