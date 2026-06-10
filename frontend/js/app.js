@@ -941,7 +941,7 @@ function renderizarPaginaParcelamentos() {
         <p class="parcelamento-meta">${total}x de ${formatarBRL(t.valor)} • total ${formatarBRL(valorTotal)}</p>
         <div class="barra-progresso"><div class="barra-progresso__preench" style="width:${pct}%"></div></div>
         <p class="parcelamento-meta">${pagas}/${total} pagas • restante ${formatarBRL(restante)} • próximo: ${proxTxt}</p>
-        <button class="btn-acao btn-acao--excluir" onclick="excluirTransacao('${t.id}')" aria-label="Excluir plano">🗑️ Excluir</button>
+        <button class="btn-acao btn-acao--excluir parcelamento-excluir" onclick="excluirTransacao('${t.id}')" aria-label="Excluir plano">🗑️ Excluir</button>
       </div>`;
   }).join('');
 }
@@ -967,6 +967,7 @@ async function excluirTransacao(id) {
     aplicarFiltros();
     renderizarTransacoesRecentes(todasTransacoes.slice(0, 5));
     renderizarContasPagar();
+    renderizarPaginaParcelamentos();
     carregarDashboard();
     mostrarToast('Transação excluída.', 'sucesso');
   } catch (erro) {

@@ -573,6 +573,7 @@
 .card-saldo-total { background-color: var(--cor-fundo-card); border: 1px solid var(--cor-borda); border-radius: var(--raio-lg); padding: var(--espaco-lg); margin-bottom: var(--espaco-md); box-shadow: var(--sombra-card); }
 .parcelamento-cabecalho { display: flex; align-items: center; justify-content: space-between; gap: var(--espaco-sm); }
 .parcelamento-meta { color: var(--cor-texto-secundario); font-size: 0.85rem; margin-top: var(--espaco-sm); }
+.btn-acao.parcelamento-excluir { width: auto; height: auto; gap: var(--espaco-xs); padding: var(--espaco-sm) var(--espaco-md); margin-top: var(--espaco-md); font-size: 0.85rem; }
 .barra-progresso { height: 8px; border-radius: var(--raio-pill); background: var(--cor-borda); overflow: hidden; margin-top: var(--espaco-sm); }
 .barra-progresso__preench { height: 100%; background: var(--cor-primaria); }
 
