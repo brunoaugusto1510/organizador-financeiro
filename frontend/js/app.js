@@ -950,7 +950,8 @@ function renderizarPaginaParcelamentos() {
 
   container.innerHTML = planos.map(t => {
     const total = t.parcelas;
-    const pagas = t.parcelasPagas || 0;
+    const statusArr = pStatusDeParcelas(t);
+    const pagas = pContarQuitadas(statusArr);
     const valorTotal = t.valor * total;
     const restante = (total - pagas) * t.valor;
     const prox = pProximaEmAberto(t);
@@ -958,7 +959,6 @@ function renderizarPaginaParcelamentos() {
     const pct = Math.round((pagas / total) * 100);
     const badge = t.tipo === 'entrada' ? 'Entrada' : 'Saída';
     const aberto = parcelasExpandidas.has(t.id);
-    const statusArr = pStatusDeParcelas(t);
     const listaParcelas = aberto
       ? `<ul class="parcelas-lista">${statusArr.map((st, idx) => _linhaParcela(t, idx, st)).join('')}</ul>`
       : '';
