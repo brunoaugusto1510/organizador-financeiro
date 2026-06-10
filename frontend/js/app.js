@@ -748,6 +748,40 @@ async function alternarOcultaTransacao(id) {
   }
 }
 
+function renderizarPaginacao(total, ini) {
+  const cont = document.getElementById('paginacao-transacoes');
+  if (!cont) return;
+  if (!total) { cont.innerHTML = ''; return; }
+  const pp = estadoFiltros.porPagina;
+  const totalPaginas = Math.max(1, Math.ceil(total / pp));
+  const pag = estadoFiltros.pagina;
+  const de = ini + 1;
+  const ate = Math.min(ini + pp, total);
+  cont.innerHTML = `
+    <label class="tx-paginacao__pp">Por página
+      <select class="tx-select" onchange="mudarPorPagina(this.value)">
+        ${[10, 25, 50].map((n) => `<option value="${n}" ${n === pp ? 'selected' : ''}>${n}</option>`).join('')}
+      </select>
+    </label>
+    <div class="tx-paginacao__nav">
+      <span>Mostrando ${de} a ${ate} de ${total}</span>
+      <button class="tx-pag-btn" onclick="mudarPagina(${pag - 1})" ${pag <= 1 ? 'disabled' : ''} aria-label="Página anterior">‹</button>
+      <span class="tx-pag-atual">${pag}</span>
+      <button class="tx-pag-btn" onclick="mudarPagina(${pag + 1})" ${pag >= totalPaginas ? 'disabled' : ''} aria-label="Próxima página">›</button>
+    </div>`;
+}
+
+function mudarPagina(n) {
+  estadoFiltros.pagina = Math.max(1, Number(n));
+  aplicarFiltros();
+}
+
+function mudarPorPagina(n) {
+  estadoFiltros.porPagina = Number(n);
+  estadoFiltros.pagina = 1;
+  aplicarFiltros();
+}
+
 // ============================================================
 // TELA CATEGORIAS
 // ============================================================
