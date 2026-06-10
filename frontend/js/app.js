@@ -217,6 +217,12 @@ async function loadCategorias() {
     select.innerHTML = '<option value="">Selecione...</option>' +
       CATEGORIAS.map((c) => `<option value="${c.slug}">${c.name}</option>`).join('');
   }
+
+  const filtroCat = document.getElementById('filtro-categoria');
+  if (filtroCat) {
+    filtroCat.innerHTML = '<option value="todas">Todas as categorias</option>' +
+      CATEGORIAS.map((c) => `<option value="${c.slug}">${c.name}</option>`).join('');
+  }
 }
 
 // --- Transações recentes ---
@@ -547,51 +553,34 @@ function limparErrosForm() {
 
 /** Inicializa os listeners da seção de transações */
 function inicializarSecaoTransacoes() {
-  // Botão "Nova Transação" da seção de listagem
   document.getElementById('btn-nova-transacao-lista')?.addEventListener('click', () => abrirModal());
 
-  // Filtros rápidos por tipo
-  document.querySelectorAll('[data-filtro-tipo]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('[data-filtro-tipo]').forEach(b => b.classList.remove('ativo'));
-      btn.classList.add('ativo');
-      estadoFiltros.tipo = btn.dataset.filtroTipo;
+  const ligaSelect = (id, prop) => {
+    document.getElementById(id)?.addEventListener('change', (e) => {
+      estadoFiltros[prop] = e.target.value;
+      estadoFiltros.pagina = 1;
       aplicarFiltros();
     });
+  };
+  ligaSelect('filtro-periodo', 'periodo');
+  ligaSelect('filtro-tipo', 'tipo');
+  ligaSelect('filtro-ordenacao', 'ordenacao');
+  ligaSelect('filtro-categoria', 'categoria');
+
+  document.getElementById('filtro-mostrar-ocultos')?.addEventListener('change', (e) => {
+    estadoFiltros.mostrarOcultos = e.target.checked;
+    estadoFiltros.pagina = 1;
+    aplicarFiltros();
   });
 
-  // Busca por texto (debounce de 300ms)
   let debounce;
   document.getElementById('filtro-busca')?.addEventListener('input', (e) => {
     clearTimeout(debounce);
     debounce = setTimeout(() => {
       estadoFiltros.busca = e.target.value.trim().toLowerCase();
+      estadoFiltros.pagina = 1;
       aplicarFiltros();
     }, 300);
-  });
-
-  // Filtros por data
-  document.getElementById('filtro-data-inicio')?.addEventListener('change', (e) => {
-    estadoFiltros.dataInicio = e.target.value;
-    aplicarFiltros();
-  });
-  document.getElementById('filtro-data-fim')?.addEventListener('change', (e) => {
-    estadoFiltros.dataFim = e.target.value;
-    aplicarFiltros();
-  });
-
-  // Limpar todos os filtros
-  document.getElementById('btn-limpar-filtros')?.addEventListener('click', () => {
-    estadoFiltros = { tipo: 'todos', busca: '', dataInicio: '', dataFim: '' };
-
-    document.getElementById('filtro-busca').value = '';
-    document.getElementById('filtro-data-inicio').value = '';
-    document.getElementById('filtro-data-fim').value = '';
-
-    document.querySelectorAll('[data-filtro-tipo]').forEach(b => b.classList.remove('ativo'));
-    document.getElementById('filtro-todos')?.classList.add('ativo');
-
-    aplicarFiltros();
   });
 }
 
