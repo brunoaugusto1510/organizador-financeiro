@@ -51,6 +51,18 @@ const transactionSchema = new mongoose.Schema(
         message: 'Parcelas pagas não pode exceder o total de parcelas.',
       },
     },
+    parcelasStatus: {
+      type: [
+        {
+          type: String,
+          enum: {
+            values: ['pendente', 'paga', 'adiantada'],
+            message: 'Status de parcela inválido.',
+          },
+        },
+      ],
+      default: [],
+    },
     oculto: {
       type: Boolean,
       default: false,

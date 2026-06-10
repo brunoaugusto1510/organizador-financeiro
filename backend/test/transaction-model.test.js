@@ -8,3 +8,10 @@ test('schema Transaction tem campo oculto Boolean com default false', () => {
   assert.equal(path.instance, 'Boolean');
   assert.equal(path.defaultValue, false);
 });
+
+test('schema Transaction tem parcelasStatus array de enum', () => {
+  const path = Transaction.schema.path('parcelasStatus');
+  assert.ok(path, 'campo parcelasStatus ausente no schema');
+  assert.equal(path.instance, 'Array');
+  assert.deepEqual(path.embeddedSchemaType.enumValues, ['pendente', 'paga', 'adiantada']);
+});
