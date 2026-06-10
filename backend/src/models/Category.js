@@ -27,6 +27,11 @@ const categorySchema = new mongoose.Schema(
       trim: true,
       default: '',
     },
+    group: {
+      type: String,
+      trim: true,
+      default: '',
+    },
   },
   {
     timestamps: true,

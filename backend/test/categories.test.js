@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { CATEGORIAS_PADRAO } from '../src/data/categories.js';
+import Category from '../src/models/Category.js';
 
 const GRUPOS_VALIDOS = new Set([
   'alimentacao', 'transporte', 'moradia', 'saude', 'compras',
@@ -31,4 +32,10 @@ test('grupo renda é income; demais grupos são expense', () => {
     if (c.group === 'renda') assert.equal(c.type, 'income', `${c.slug} deveria ser income`);
     else assert.equal(c.type, 'expense', `${c.slug} deveria ser expense`);
   }
+});
+
+test('schema Category tem o campo group do tipo String', () => {
+  const path = Category.schema.path('group');
+  assert.ok(path, 'campo group ausente no schema');
+  assert.equal(path.instance, 'String');
 });
