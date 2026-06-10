@@ -78,13 +78,13 @@ function _fmtBRL(v) {
 }
 
 /** Donut. labels: string[], valores: number[]. */
-function criarDonut(canvasId, labels, valores) {
+function criarDonut(canvasId, labels, valores, cores = CORES_GRAFICO) {
   const canvas = document.getElementById(canvasId);
   if (!canvas || typeof Chart === 'undefined') return;
   _resetChart(canvasId);
   _chartInstances[canvasId] = new Chart(canvas, {
     type: 'doughnut',
-    data: { labels, datasets: [{ data: valores, backgroundColor: CORES_GRAFICO, borderWidth: 0 }] },
+    data: { labels, datasets: [{ data: valores, backgroundColor: cores, borderWidth: 0 }] },
     options: {
       responsive: true, cutout: '68%',
       plugins: { legend: { position: 'bottom', labels: { color: '#a1a1aa', padding: 16 } } },
