@@ -666,6 +666,55 @@ function renderizarTabelaTransacoes(lista) {
 // ============================================================
 // TELA CATEGORIAS
 // ============================================================
+let mesCategorias = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+const GRUPOS_COLAPSADOS = new Set();
+
+function chaveMes(date) {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+}
+
+function rotuloMes(date) {
+  const txt = date.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+  return txt.charAt(0).toUpperCase() + txt.slice(1);
+}
+
+function transacoesDoMes() {
+  const chave = chaveMes(mesCategorias);
+  return todasTransacoes.filter((t) => String(t.data).slice(0, 7) === chave);
+}
+
+/** Agrega transações por grupo → [{ group, total, subs:[{categoria,total}] }] desc. */
+function agregarPorGrupo(transacoes) {
+  const grupos = {};
+  for (const t of transacoes) {
+    const slug = t.categoria || 'outros';
+    const grupo = MAPA_GRUPO_CATEGORIA[slug] || 'outros';
+    if (!grupos[grupo]) grupos[grupo] = { group: grupo, total: 0, subs: {} };
+    grupos[grupo].total += t.valor;
+    grupos[grupo].subs[slug] = (grupos[grupo].subs[slug] || 0) + t.valor;
+  }
+  return Object.values(grupos)
+    .map((g) => ({
+      group: g.group,
+      total: g.total,
+      subs: Object.entries(g.subs)
+        .map(([categoria, total]) => ({ categoria, total }))
+        .sort((a, b) => b.total - a.total),
+    }))
+    .sort((a, b) => b.total - a.total);
+}
+
+function mudarMesCategorias(delta) {
+  mesCategorias = new Date(mesCategorias.getFullYear(), mesCategorias.getMonth() + delta, 1);
+  renderizarPaginaCategorias();
+}
+
+function toggleGrupoCategoria(slug) {
+  if (GRUPOS_COLAPSADOS.has(slug)) GRUPOS_COLAPSADOS.delete(slug);
+  else GRUPOS_COLAPSADOS.add(slug);
+  renderizarPaginaCategorias();
+}
+
 function renderizarPaginaCategorias() {
   const fonte = todasTransacoes;
   renderizarBarraCategorias('barra-categorias-pagina', fonte);
