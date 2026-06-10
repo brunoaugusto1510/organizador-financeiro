@@ -35,6 +35,7 @@ function normalizarTransacaoApi(transacao) {
     observacao: transacao.description || '',
     parcelas: transacao.parcelas ?? 1,
     parcelasPagas: transacao.parcelasPagas ?? 0,
+    parcelasStatus: Array.isArray(transacao.parcelasStatus) ? transacao.parcelasStatus : [],
     oculto: transacao.oculto ?? false,
   };
 }
@@ -55,6 +56,7 @@ function montarPayloadTransacao(dados) {
     parcelas: dados.parcelas ?? 1,
     oculto: dados.oculto ?? false,
     ...(dados.parcelasPagas !== undefined ? { parcelasPagas: dados.parcelasPagas } : {}),
+    ...(Array.isArray(dados.parcelasStatus) ? { parcelasStatus: dados.parcelasStatus } : {}),
   };
 }
 
