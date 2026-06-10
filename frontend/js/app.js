@@ -20,6 +20,23 @@ let todasTransacoes = [];
 let CATEGORIAS = [];
 let MAPA_LABEL_CATEGORIA = {};
 let MAPA_EMOJI_CATEGORIA = {};
+let MAPA_GRUPO_CATEGORIA = {};
+
+// Estilo dos grupos (única fonte de cor/ícone/ordem do grupo no front).
+const GRUPOS = {
+  alimentacao: { label: 'Alimentação',       icon: '🍽️', cor: '#a78bfa', ordem: 1 },
+  transporte:  { label: 'Transporte',        icon: '🚗', cor: '#60a5fa', ordem: 2 },
+  moradia:     { label: 'Moradia',           icon: '🏠', cor: '#fb923c', ordem: 3 },
+  saude:       { label: 'Saúde e bem-estar', icon: '💊', cor: '#fb7185', ordem: 4 },
+  compras:     { label: 'Compras',           icon: '🛍️', cor: '#f472b6', ordem: 5 },
+  lazer:       { label: 'Lazer',             icon: '🎮', cor: '#fbbf24', ordem: 6 },
+  educacao:    { label: 'Educação',          icon: '📚', cor: '#2dd4bf', ordem: 7 },
+  financas:    { label: 'Finanças',          icon: '💰', cor: '#34d399', ordem: 8 },
+  servicos:    { label: 'Serviços',          icon: '🧰', cor: '#94a3b8', ordem: 9 },
+  outros:      { label: 'Outros',            icon: '📦', cor: '#b8a08a', ordem: 10 },
+  renda:       { label: 'Renda',             icon: '💵', cor: '#10b981', ordem: 11 },
+};
+
 let estadoFiltros = { tipo: 'todos', busca: '', dataInicio: '', dataFim: '' };
 
 // ============================================================
@@ -179,9 +196,11 @@ async function loadCategorias() {
 
   MAPA_LABEL_CATEGORIA = {};
   MAPA_EMOJI_CATEGORIA = {};
+  MAPA_GRUPO_CATEGORIA = {};
   CATEGORIAS.forEach((c) => {
     MAPA_LABEL_CATEGORIA[c.slug] = c.name;
     MAPA_EMOJI_CATEGORIA[c.slug] = c.icon || '📦';
+    MAPA_GRUPO_CATEGORIA[c.slug] = c.group || 'outros';
   });
 
   const select = document.getElementById('transacao-categoria');
@@ -647,15 +666,131 @@ function renderizarTabelaTransacoes(lista) {
 // ============================================================
 // TELA CATEGORIAS
 // ============================================================
+let mesCategorias = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+const GRUPOS_COLAPSADOS = new Set();
+
+function chaveMes(date) {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+}
+
+function rotuloMes(date) {
+  const txt = date.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+  return txt.charAt(0).toUpperCase() + txt.slice(1);
+}
+
+function transacoesDoMes() {
+  const chave = chaveMes(mesCategorias);
+  return todasTransacoes.filter((t) => String(t.data).slice(0, 7) === chave);
+}
+
+/** Agrega transações por grupo → [{ group, total, subs:[{categoria,total}] }] desc. */
+function agregarPorGrupo(transacoes) {
+  const grupos = {};
+  for (const t of transacoes) {
+    const slug = t.categoria || 'outros';
+    const grupo = MAPA_GRUPO_CATEGORIA[slug] || 'outros';
+    if (!grupos[grupo]) grupos[grupo] = { group: grupo, total: 0, subs: {} };
+    grupos[grupo].total += t.valor;
+    grupos[grupo].subs[slug] = (grupos[grupo].subs[slug] || 0) + t.valor;
+  }
+  return Object.values(grupos)
+    .map((g) => ({
+      group: g.group,
+      total: g.total,
+      subs: Object.entries(g.subs)
+        .map(([categoria, total]) => ({ categoria, total }))
+        .sort((a, b) => b.total - a.total),
+    }))
+    .sort((a, b) => b.total - a.total);
+}
+
+function mudarMesCategorias(delta) {
+  mesCategorias = new Date(mesCategorias.getFullYear(), mesCategorias.getMonth() + delta, 1);
+  renderizarPaginaCategorias();
+}
+
+function toggleGrupoCategoria(slug) {
+  if (GRUPOS_COLAPSADOS.has(slug)) GRUPOS_COLAPSADOS.delete(slug);
+  else GRUPOS_COLAPSADOS.add(slug);
+  renderizarPaginaCategorias();
+}
+
 function renderizarPaginaCategorias() {
-  const fonte = todasTransacoes;
-  renderizarBarraCategorias('barra-categorias-pagina', fonte);
-  const dados = agregarPorCategoria(fonte);
-  const cores = dados.map((_, i) => CORES_CATEGORIAS[i % CORES_CATEGORIAS.length]);
-  criarDonut('grafico-donut-categorias', dados.map(d => labelCategoria(d.categoria)), dados.map(d => d.total), cores);
-  const lista = document.getElementById('lista-categorias');
-  if (lista) lista.innerHTML = dados.map(d => `
-    <div class="investimento-row"><span>${labelCategoria(d.categoria)}</span><strong>${formatarBRL(d.total)}</strong></div>`).join('') || criarEstadoVazio('Sem gastos no período.');
+  const doMes = transacoesDoMes();
+  const saidas = doMes.filter((t) => t.tipo === 'saida');
+  const totalGasto = saidas.reduce((acc, t) => acc + t.valor, 0);
+
+  // Header: total + donut-mini + navegador de mês
+  const header = document.getElementById('categorias-header');
+  if (header) {
+    header.innerHTML = `
+      <div class="cat-header__total">
+        <strong>${formatarBRL(totalGasto)}</strong>
+        <span>gasto em ${rotuloMes(mesCategorias)}</span>
+      </div>
+      <div class="cat-header__donut">
+        <canvas id="grafico-donut-categorias" height="120" role="img" aria-label="Gráfico de gastos por categoria"></canvas>
+      </div>
+      <div class="cat-mes-nav">
+        <button class="cat-mes-nav__btn" onclick="mudarMesCategorias(-1)" aria-label="Mês anterior">‹</button>
+        <span class="cat-mes-nav__label">${rotuloMes(mesCategorias)}</span>
+        <button class="cat-mes-nav__btn" onclick="mudarMesCategorias(1)" aria-label="Próximo mês">›</button>
+      </div>`;
+  }
+
+  // Donut: grupos de despesa do mês
+  const gruposSaida = agregarPorGrupo(saidas);
+  criarDonut(
+    'grafico-donut-categorias',
+    gruposSaida.map((g) => GRUPOS[g.group]?.label ?? g.group),
+    gruposSaida.map((g) => g.total),
+    gruposSaida.map((g) => GRUPOS[g.group]?.cor ?? '#52525b'),
+  );
+
+  // Lista: grupos com atividade (saída + entrada), em acordeão
+  const realizadas = doMes.filter((t) => t.tipo === 'saida' || t.tipo === 'entrada');
+  const grupos = agregarPorGrupo(realizadas);
+  const lista = document.getElementById('categorias-lista');
+  if (!lista) return;
+  if (!grupos.length) {
+    lista.innerHTML = criarEstadoVazio('Sem transações neste mês.');
+    return;
+  }
+
+  const maxGrupo = Math.max(...grupos.map((g) => g.total));
+  lista.innerHTML = grupos.map((g) => {
+    const meta = GRUPOS[g.group] ?? { label: g.group, icon: '📦', cor: '#b8a08a' };
+    const colapsado = GRUPOS_COLAPSADOS.has(g.group);
+    const pctGrupo = maxGrupo ? (g.total / maxGrupo * 100).toFixed(1) : 0;
+
+    const subsHtml = g.subs.map((s) => {
+      const pctSub = g.total ? (s.total / g.total * 100).toFixed(1) : 0;
+      return `
+        <div class="cat-sub">
+          <span class="cat-sub__icone">${emojiCategoria(s.categoria)}</span>
+          <span class="cat-sub__nome">${labelCategoria(s.categoria)}</span>
+          <span class="cat-sub__valor">${formatarBRL(s.total)}</span>
+          <div class="barra-progresso barra-progresso--fina">
+            <div class="barra-progresso__preench" style="width:${pctSub}%;background:${meta.cor}"></div>
+          </div>
+        </div>`;
+    }).join('');
+
+    return `
+      <div class="cat-grupo ${colapsado ? 'cat-grupo--colapsado' : ''}">
+        <button class="cat-grupo__cabecalho" onclick="toggleGrupoCategoria('${g.group}')" aria-expanded="${!colapsado}">
+          <span class="cat-grupo__chevron">${colapsado ? '⌄' : '⌃'}</span>
+          <span class="cat-grupo__icone" style="background:${meta.cor}">${meta.icon}</span>
+          <span class="cat-grupo__badge" style="background:${meta.cor}">${g.subs.length}</span>
+          <span class="cat-grupo__nome">${meta.label}</span>
+          <span class="cat-grupo__valor">${formatarBRL(g.total)}</span>
+          <div class="barra-progresso">
+            <div class="barra-progresso__preench" style="width:${pctGrupo}%;background:${meta.cor}"></div>
+          </div>
+        </button>
+        <div class="cat-grupo__subs">${subsHtml}</div>
+      </div>`;
+  }).join('');
 }
 
 // ============================================================
@@ -868,32 +1003,6 @@ function transacaoCard(t) {
       </div>
       <span class="transacao-card__valor valor--${t.tipo}">${sinal} ${formatarBRL(t.valor)}</span>
     </div>`;
-}
-
-/** Agrega transações de saída por categoria → [{categoria, total}] desc. */
-function agregarPorCategoria(transacoes) {
-  const mapa = {};
-  transacoes.filter(t => t.tipo === 'saida').forEach(t => {
-    const c = t.categoria || 'outros';
-    mapa[c] = (mapa[c] || 0) + t.valor;
-  });
-  return Object.entries(mapa).map(([categoria, total]) => ({ categoria, total }))
-    .sort((a, b) => b.total - a.total);
-}
-
-/** Paleta de cores das categorias — compartilhada entre a barra e o donut. */
-const CORES_CATEGORIAS = ['#f472b6','#a78bfa','#fbbf24','#60a5fa','#34d399','#fb923c'];
-
-/** Renderiza a barra multicolor de categorias num container. */
-function renderizarBarraCategorias(containerId, transacoes) {
-  const el = document.getElementById(containerId);
-  if (!el) return;
-  const dados = agregarPorCategoria(transacoes);
-  const total = dados.reduce((s, d) => s + d.total, 0) || 1;
-  const cores = CORES_CATEGORIAS;
-  const segs = dados.map((d, i) => `<div class="barra-categorias__seg" style="width:${(d.total/total*100).toFixed(1)}%;background:${cores[i%cores.length]}"></div>`).join('');
-  const legenda = dados.map((d, i) => `<span class="barra-categorias__item"><span class="barra-categorias__dot" style="background:${cores[i%cores.length]}"></span>${labelCategoria(d.categoria)} — ${formatarBRL(d.total)}</span>`).join('');
-  el.innerHTML = `<div class="barra-categorias__trilha">${segs}</div><div class="barra-categorias__legenda">${legenda}</div>`;
 }
 
 

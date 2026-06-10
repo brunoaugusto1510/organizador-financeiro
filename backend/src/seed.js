@@ -4,6 +4,7 @@ import { fileURLToPath } from 'url';
 import mongoose from 'mongoose';
 import connectDatabase from './config/database.js';
 import Category from './models/Category.js';
+import { CATEGORIAS_PADRAO } from './data/categories.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -11,21 +12,8 @@ const __dirname = path.dirname(__filename);
 dotenv.config();
 dotenv.config({ path: path.join(__dirname, '../.env') });
 
-// Categorias padrão para popular o banco na primeira execução.
-const defaultCategories = [
-  { slug: 'salario',      name: 'Salário',      type: 'income',  icon: '💰' },
-  { slug: 'renda_extra',  name: 'Renda Extra',  type: 'income',  icon: '💵' },
-  { slug: 'investimento', name: 'Investimento', type: 'income',  icon: '📈' },
-  { slug: 'moradia',      name: 'Moradia',      type: 'expense', icon: '🏠' },
-  { slug: 'alimentacao',  name: 'Alimentação',  type: 'expense', icon: '🍽️' },
-  { slug: 'transporte',   name: 'Transporte',   type: 'expense', icon: '🚗' },
-  { slug: 'saude',        name: 'Saúde',        type: 'expense', icon: '🏥' },
-  { slug: 'educacao',     name: 'Educação',     type: 'expense', icon: '📚' },
-  { slug: 'lazer',        name: 'Lazer',        type: 'expense', icon: '🎮' },
-  { slug: 'vestuario',    name: 'Vestuário',    type: 'expense', icon: '👕' },
-  { slug: 'utilidades',   name: 'Utilidades',   type: 'expense', icon: '💡' },
-  { slug: 'outros',       name: 'Outros',       type: 'expense', icon: '📦' },
-];
+// Categorias padrão para popular o banco. Fonte: src/data/categories.js
+const defaultCategories = CATEGORIAS_PADRAO;
 
 const seedCategories = async () => {
   await connectDatabase();
